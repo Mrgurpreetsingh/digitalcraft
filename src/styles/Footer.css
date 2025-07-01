@@ -1,0 +1,24 @@
+nav {
+  padding: 20px;
+  background-color: #FFFFFF;
+}
+
+nav ul {
+  list-style: none;
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  padding: 0;
+}
+
+nav a {
+  color: #1A1A1A;
+  text-decoration: none;
+}
+
+@media (max-width: 576px) {
+  nav ul {
+    flex-direction: column;
+    align-items: center;
+  }
+}

@@ -1,0 +1,26 @@
+section {
+  padding: 20px;
+  text-align: center;
+}
+
+h1 {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  font-size: 32px;
+  color: #005DAA;
+}
+
+p {
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  color: #1A1A1A;
+}
+
+button {
+  background-color: #005DAA;
+  color: #FFFFFF;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+}
