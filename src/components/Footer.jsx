@@ -1,13 +1,11 @@
 import React from 'react';
-import '../App.css';
-import { FaFacebook, FaLinkedin } from 'react-icons/fa';
+import '../styles/Footer.css';
 
 function Footer() {
   return (
-    <footer style={{ padding: '20px', backgroundColor: '#4B5563', color: '#FFFFFF', textAlign: 'center' }}>
+    <footer>
       <p>
-        Contact | <a href="#" style={{ color: '#FFFFFF', textDecoration: 'none' }}><FaFacebook /></a> | 
-        <a href="#" style={{ color: '#FFFFFF', textDecoration: 'none' }}><FaLinkedin /></a> | © 2025 DigitalCraft
+        Contact | © 2025 DigitalCraft
       </p>
     </footer>
   );
