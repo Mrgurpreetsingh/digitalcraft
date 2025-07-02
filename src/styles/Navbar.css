@@ -1,12 +1,25 @@
-footer {
+nav {
   padding: 20px;
-  background-color: #4B5563;
-  color: #FFFFFF;
-  text-align: center;
+  background-color: #FFFFFF;
 }
 
-footer a {
-  color: #FFFFFF;
+nav ul {
+  list-style: none;
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  padding: 0;
+}
+
+nav a {
+  color:  #4B5563;
   text-decoration: none;
-  margin: 0 8px;
+  font-family: 'Poppins';
+}
+
+@media (max-width: 576px) {
+  nav ul {
+    flex-direction: column;
+    align-items: center;
+  }
 }
