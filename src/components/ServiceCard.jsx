@@ -2,11 +2,11 @@ import React from 'react';
 import styled from 'styled-components';
 
 const Card = styled.div`
-  background-color: #FFFFFF;
+  background-color: var(--white);
   padding: 20px;
   border-radius: 8px;
   text-align: left;
-  color: #1E293B;
+  color: var(--text-dark);
 `;
 
 const Title = styled.h3`
@@ -18,7 +18,7 @@ const Title = styled.h3`
 const Description = styled.p`
   font-family: 'Inter', sans-serif;
   font-size: 14px;
-  color: #64748B;
+  color: var(--text-light);
   margin-bottom: 10px;
 `;
 
@@ -30,7 +30,7 @@ const List = styled.ul`
 const ListItem = styled.li`
   font-family: 'Inter', sans-serif;
   font-size: 14px;
-  color: #10B981;
+  color: var(--secondary-color);
   margin-bottom: 5px;
 
   &:before {
@@ -41,7 +41,7 @@ const ListItem = styled.li`
 const Link = styled.a`
   font-family: 'Inter', sans-serif;
   font-size: 14px;
-  color: #1E40AF;
+  color: var(--primary-color);
   text-decoration: none;
 
   &:hover {
