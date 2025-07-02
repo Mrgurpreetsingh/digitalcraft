@@ -18,6 +18,7 @@ function Home() {
         </div>
       </section>
       <section className="services">
+        {/* Sections services et testimonials peuvent être ajoutées progressivement */}
         <h1>Nos Services Experts</h1>
         <p>Des solutions complètes pour développer votre présence digitale et faire croître votre entreprise.</p>
         <div className="services-grid">
