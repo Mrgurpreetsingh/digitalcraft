@@ -1,0 +1,12 @@
+:root {
+  --primary-color: #1E40AF;
+  --secondary-color: #10B981;
+  --text-dark: #1E293B;
+  --text-light: #64748B;
+  --white: #FFFFFF;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', 'Poppins', sans-serif;
+}
