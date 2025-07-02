@@ -1,12 +1,36 @@
 :root {
   --primary-color: #1E40AF;
-  --secondary-color: #10B981;
+  --secondary-color: #34C759; /* Changement de couleur */
   --text-dark: #1E293B;
   --text-light: #64748B;
   --white: #FFFFFF;
+  color-scheme: light dark;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
   margin: 0;
   font-family: 'Inter', 'Poppins', sans-serif;
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+
+a:hover {
+  color: #535bf2;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+  }
+  a:hover {
+    color: #747bff;
+  }
 }
