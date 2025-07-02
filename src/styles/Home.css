@@ -1,0 +1,167 @@
+.home-section {
+  padding: 40px 20px;
+  background: linear-gradient(to bottom, #005DAA 0%, #1D4ED8 100%);
+}
+
+.home-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto;
+  flex-wrap: wrap;
+}
+
+.home-text {
+  flex: 1;
+  min-width: 300px;
+  padding: 20px;
+  text-align: left;
+}
+
+.home-text h1 {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  font-size: 48px;
+  color: #FFFFFF;
+  margin-bottom: 16px;
+}
+
+.home-text p {
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  color: #DBEAFE;
+  margin-bottom: 20px;
+}
+
+.home-text button {
+  background-color: #34C759;
+  color: #FFFFFF;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.home-image {
+  flex: 1;
+  min-width: 300px;
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+.home-image img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.services {
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.services h1 {
+  font-family: 'Poppins', sans-serif;
+  font-size: 36px;
+  color: #1E293B;
+}
+
+.services p {
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  color: #64748B;
+  margin-bottom: 20px;
+}
+
+.services-grid {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.service-card {
+  background: #FFFFFF;
+  border-radius: 8px;
+  padding: 20px;
+  width: 300px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.service-icon {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+.service-card h3 {
+  font-family: 'Poppins', sans-serif;
+  font-size: 20px;
+  color: #1E293B;
+}
+
+.service-card ul {
+  list-style: none;
+  padding: 0;
+  text-align: left;
+}
+
+.service-card ul li {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: #64748B;
+  margin-bottom: 8px;
+}
+
+.testimonials {
+  padding: 40px 20px;
+  text-align: center;
+  background-color: #F9FAFB;
+}
+
+.testimonials h1 {
+  font-family: 'Poppins', sans-serif;
+  font-size: 36px;
+  color: #1E293B;
+}
+
+.testimonials p {
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  color: #64748B;
+  margin-bottom: 20px;
+}
+
+.testimonials-grid {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.testimonial-card {
+  background: #FFFFFF;
+  border-radius: 8px;
+  padding: 20px;
+  width: 300px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.testimonial-card img {
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+}
+
+.testimonial-card h4 {
+  font-family: 'Poppins', sans-serif;
+  font-size: 18px;
+  color: #1E293B;
+}
+
+.testimonial-card p {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: #64748B;
+}
