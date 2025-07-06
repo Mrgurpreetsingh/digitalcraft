@@ -8,11 +8,11 @@ const StyledButton = styled.button`
   padding: 10px 20px;
   font-family: 'Poppins', sans-serif;
   font-size: 16px;
-  border-radius: 8px; /* Changement de 4px à 8px */
+  border-radius: 8px; 
   cursor: pointer;
 
   &:hover {
-    background-color: #059669; /* Garde l'effet hover, ajuste si besoin */
+    background-color: #059669; /*effet hover en arrere plan */
   }
 `;
 
