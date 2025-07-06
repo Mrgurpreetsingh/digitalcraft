@@ -2,7 +2,8 @@ import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
-import Services from './pages/Services'; // Importe la nouvelle page
+import Services from './pages/Services'; 
+import ContactPage from './pages/ContactPage';
 import Footer from './components/Footer';
 // Supprime temporairement FaFacebook et FaLinkedin s'ils ne sont pas utilisés
 // import { FaFacebook, FaLinkedin } from 'react-icons/fa'; (commenté pour l'instant)
@@ -15,6 +16,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/services" element={<Services />} /> {/* Nouvelle route */}
+          <Route path="/contact" element={<ContactPage />} />
         </Routes>
         <Footer />
       </div>
