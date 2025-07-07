@@ -1,12 +1,13 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Navbar from './components/Navbar';
-import Home from './pages/Home';
-import Services from './pages/Services'; 
-import ContactPage from './pages/ContactPage';
+import Home from './pages/Home.jsx';
+import Services from './pages/Services.jsx';
+import ContactPage from './pages/ContactPage.jsx';
+import InscriptionPage from './pages/Inscription.jsx';
+import ConnexionPage from './pages/Connexion.jsx';
+import DevisPage from './pages/Devis.jsx';
 import Footer from './components/Footer';
-// Supprime temporairement FaFacebook et FaLinkedin s'ils ne sont pas utilisés
-// import { FaFacebook, FaLinkedin } from 'react-icons/fa'; (commenté pour l'instant)
 
 function App() {
   return (
@@ -15,8 +16,11 @@ function App() {
         <Navbar />
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/services" element={<Services />} /> {/* Nouvelle route */}
+          <Route path="/services" element={<Services />} />
           <Route path="/contact" element={<ContactPage />} />
+          <Route path="/inscription" element={<InscriptionPage />} />
+          <Route path="/connexion" element={<ConnexionPage />} />
+          <Route path="/devis" element={<DevisPage />} />
         </Routes>
         <Footer />
       </div>
