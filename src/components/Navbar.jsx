@@ -12,7 +12,7 @@ function Navbar() {
         <li><a href="/portfolio">Portfolio</a></li>
         <li><a href="/contact">Contact</a></li>
         <li>
-          <a href={isLoggedIn ? '/' : '/login'} onClick={() => isLoggedIn && setIsLoggedIn(false)}>
+          <a href={isLoggedIn ? '/' : '/connexion'} onClick={() => isLoggedIn && setIsLoggedIn(false)}>
             {isLoggedIn ? 'Déconnexion' : 'Connexion'}
           </a>
         </li>
