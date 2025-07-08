@@ -1,0 +1,179 @@
+/*
+==============================================
+DICTIONNAIRE DE DONNÉES - DIGITALCRAFT
+==============================================
+Projet ECF : Thème Agence du Web
+Développeur : Gurpreet
+Date : 07/05/2025
+==============================================
+*/
+
+/*
+TABLE : Utilisateur
+Description : Gestion des utilisateurs (Visiteurs, Employés, Administrateurs)
+*/
+idUtilisateur       INT             PRIMARY KEY AUTO_INCREMENT     -- Identifiant unique
+nom                 VARCHAR(100)    NOT NULL                       -- Nom de famille
+prenom              VARCHAR(100)    NOT NULL                       -- Prénom
+email               VARCHAR(255)    NOT NULL UNIQUE                -- Email connexion (RGPD)
+motDePasse          VARCHAR(255)    NOT NULL                       -- Mot de passe haché (bcrypt)
+role                ENUM('Visiteur', 'Employé', 'Administrateur') NOT NULL DEFAULT 'Visiteur' -- Rôle
+createdAt           TIMESTAMP       DEFAULT CURRENT_TIMESTAMP      -- Date création
+updatedAt           TIMESTAMP       DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP -- MAJ
+
+/*
+TABLE : Service
+Description : Services proposés par l'agence (US 3)
+*/
+idService           INT             PRIMARY KEY AUTO_INCREMENT     -- Identifiant unique
+titre               VARCHAR(255)    NOT NULL                       -- Nom du service
+description         TEXT            NOT NULL                       -- Description détaillée
+tarifBase           DECIMAL(10,2)   NOT NULL                       -- Tarif de base
+exemples            TEXT            NULL                           -- Exemples de réalisations
+createdAt           TIMESTAMP       DEFAULT CURRENT_TIMESTAMP      -- Date création
+updatedAt           TIMESTAMP       DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP -- MAJ
+
+/*
+TABLE : Projet
+Description : Portfolio des projets réalisés (US 4)
+*/
+idProjet            INT             PRIMARY KEY AUTO_INCREMENT     -- Identifiant unique
+titre               VARCHAR(255)    NOT NULL                       -- Titre du projet
+description         TEXT            NOT NULL                       -- Description
+images              TEXT            NULL                           -- URLs images/vidéos (NoSQL)
+typeServiceId       INT             FOREIGN KEY (Service.idService) NOT NULL -- Service associé
+clientId            INT             FOREIGN KEY (Utilisateur.idUtilisateur) NULL -- Client
+employeId           INT             FOREIGN KEY (Utilisateur.idUtilisateur) NULL -- Employé responsable
+statut              ENUM('En cours', 'Terminé', 'Annulé') NOT NULL DEFAULT 'En cours' -- État
+createdAt           TIMESTAMP       DEFAULT CURRENT_TIMESTAMP      -- Date création
+updatedAt           TIMESTAMP       DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP -- MAJ
+
+/*
+TABLE : Devis
+Description : Demandes de devis des visiteurs (US 5)
+*/
+idDevis             INT             PRIMARY KEY AUTO_INCREMENT     -- Identifiant unique
+nom                 VARCHAR(100)    NOT NULL                       -- Nom demandeur
+prenom              VARCHAR(100)    NOT NULL                       -- Prénom demandeur
+email               VARCHAR(255)    NOT NULL                       -- Email demandeur
+telephone           VARCHAR(20)     NULL                           -- Téléphone demandeur
+typeServiceId       INT             FOREIGN KEY (Service.idService) NOT NULL -- Service demandé
+budgetEstime        VARCHAR(50)     NOT NULL                       -- Budget estimé
+description         TEXT            NOT NULL                       -- Description projet
+statut              ENUM('En attente', 'Validé', 'Rejeté', 'En traitement') NOT NULL DEFAULT 'En attente' -- État
+createdAt           TIMESTAMP       DEFAULT CURRENT_TIMESTAMP      -- Date soumission
+reponseEmail        TEXT            NULL                           -- Réponse envoyée (RGPD)
+employeId           INT             FOREIGN KEY (Utilisateur.idUtilisateur) NULL -- Employé assigné
+updatedAt           TIMESTAMP       DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP -- MAJ
+
+/*
+TABLE : Avis
+Description : Témoignages et avis clients (US 4, US 6, US 10)
+*/
+idAvis              INT             PRIMARY KEY AUTO_INCREMENT     -- Identifiant unique
+contenu             TEXT            NOT NULL                       -- Contenu avis
+nomClient           VARCHAR(100)    NOT NULL                       -- Nom client
+entrepriseClient    VARCHAR(255)    NULL                           -- Entreprise client
+projetId            INT             FOREIGN KEY (Projet.idProjet) NULL -- Projet associé
+statut              ENUM('En attente', 'Validé', 'Rejeté') NOT NULL DEFAULT 'En attente' -- Validation Admin
+note                INT             NULL                           -- Note /5 (1-5)
+createdAt           TIMESTAMP       DEFAULT CURRENT_TIMESTAMP      -- Date avis
+updatedAt           TIMESTAMP       DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP -- MAJ
+
+/*
+TABLE : Contact
+Description : Demandes de contact des visiteurs (US 9)
+*/
+idContact           INT             PRIMARY KEY AUTO_INCREMENT     -- Identifiant unique
+nom                 VARCHAR(100)    NOT NULL                       -- Nom visiteur
+prenom              VARCHAR(100)    NOT NULL                       -- Prénom visiteur
+email               VARCHAR(255)    NOT NULL                       -- Email visiteur (RGPD)
+titre               VARCHAR(255)    NOT NULL                       -- Titre demande
+description         TEXT            NOT NULL                       -- Description demande
+statut              ENUM('En attente', 'Traité', 'Fermé') NOT NULL DEFAULT 'En attente' -- Statut
+createdAt           TIMESTAMP       DEFAULT CURRENT_TIMESTAMP      -- Date demande
+reponseEmail        TEXT            NULL                           -- Réponse envoyée
+employeId           INT             FOREIGN KEY (Utilisateur.idUtilisateur) NULL -- Employé assigné
+updatedAt           TIMESTAMP       DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP -- MAJ
+
+/*
+TABLE : Statistique
+Description : Statistiques et rapports pour admin (US 10)
+*/
+idStatistique       INT             PRIMARY KEY AUTO_INCREMENT     -- Identifiant unique
+typeServiceId       INT             FOREIGN KEY (Service.idService) NOT NULL -- Service concerné
+nbProjets           INT             NOT NULL DEFAULT 0             -- Nombre projets
+tauxConversion      DECIMAL(5,2)    NOT NULL DEFAULT 0.00          -- Taux conversion (%)
+nbDemandes          INT             NOT NULL DEFAULT 0             -- Nombre demandes devis
+nbDevisValides      INT             NOT NULL DEFAULT 0             -- Nombre devis validés
+createdAt           TIMESTAMP       DEFAULT CURRENT_TIMESTAMP      -- Date calcul
+updatedAt           TIMESTAMP       DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP -- MAJ
+
+/*
+TABLE : ReseauSocial
+Description : Gestion publications réseaux sociaux (US 7)
+*/
+idReseauSocial      INT             PRIMARY KEY AUTO_INCREMENT     -- Identifiant unique
+plateforme          ENUM('Facebook', 'Instagram', 'LinkedIn', 'Twitter') NOT NULL -- Plateforme
+contenu             TEXT            NOT NULL                       -- Contenu post
+projetId            INT             FOREIGN KEY (Projet.idProjet) NULL -- Projet associé
+employeId           INT             FOREIGN KEY (Utilisateur.idUtilisateur) NOT NULL -- Employé auteur
+statut              ENUM('Brouillon', 'Publié', 'Programmé') NOT NULL DEFAULT 'Brouillon' -- Statut
+datePublication     TIMESTAMP       NULL                           -- Date publication programmée
+createdAt           TIMESTAMP       DEFAULT CURRENT_TIMESTAMP      -- Date création
+updatedAt           TIMESTAMP       DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP -- MAJ
+
+/*
+==============================================
+RELATIONS PRINCIPALES
+==============================================
+*/
+
+-- Utilisateur (1,n) ←→ Projet (0,n) : employeId
+-- Service (1,1) ←→ Projet (0,n) : typeServiceId
+-- Service (1,1) ←→ Devis (0,n) : typeServiceId
+-- Projet (0,1) ←→ Avis (0,n) : projetId
+-- Utilisateur (0,1) ←→ Contact (0,n) : employeId
+-- Service (1,1) ←→ Statistique (0,n) : typeServiceId
+-- Projet (0,1) ←→ ReseauSocial (0,n) : projetId
+-- Utilisateur (1,1) ←→ ReseauSocial (0,n) : employeId
+
+/*
+==============================================
+CONFORMITÉ CAHIER DES CHARGES
+==============================================
+*/
+
+-- US 1 : Page d'accueil → Service, Projet, Avis
+-- US 2 : Menu → Navigation vers toutes les sections
+-- US 3 : Services → Table Service (titre, description, exemples, tarifs)
+-- US 4 : Portfolio → Table Projet + Avis (témoignages)
+-- US 5 : Devis → Table Devis (coordonnées, description, budget)
+-- US 6 : Admin → Gestion Service, Projet, Devis, Avis, Statistique
+-- US 7 : Employé → Gestion Projet, Devis, ReseauSocial
+-- US 8 : Connexion → Table Utilisateur (email, motDePasse, role)
+-- US 9 : Contact → Table Contact (nom, email, titre, description)
+-- US 10 : Statistiques → Table Statistique (projets, conversion, avis)
+
+/*
+==============================================
+SÉCURITÉ & RGPD
+==============================================
+*/
+
+-- Mots de passe : Hachage avec bcrypt
+-- Emails : Stockage sécurisé avec mentions RGPD
+-- Données personnelles : Séparation nom/prénom
+-- Accès : Contrôle par rôles (Visiteur, Employé, Admin)
+-- Timestamps : Traçabilité des modifications
+
+/*
+==============================================
+BASES DE DONNÉES
+==============================================
+*/
+
+-- Relationnelle : MySQL (tables principales)
+-- NoSQL : MongoDB/Firebase (images, fichiers, logs)
+-- Déploiement : Docker
+-- Hébergement : Netlify
