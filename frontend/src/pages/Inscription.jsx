@@ -229,6 +229,16 @@ const styles = {
   }
 };
 
+function splitNomComplet(nomComplet) {
+  const parts = nomComplet.trim().split(' ');
+  if (parts.length === 1) {
+    return { prenom: '', nom: parts[0] };
+  }
+  const nom = parts.pop();
+  const prenom = parts.join(' ');
+  return { prenom, nom };
+}
+
 const InscriptionPage = () => {
   const [formData, setFormData] = useState({
     nomComplet: '',
@@ -248,9 +258,38 @@ const InscriptionPage = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Données d\'inscription:', formData);
+    const { prenom, nom } = splitNomComplet(formData.nomComplet);
+
+    if (!prenom || !nom) {
+      alert("Veuillez saisir un prénom et un nom (ex: Jean Dupont)");
+      return;
+    }
+
+    const payload = {
+      nom,
+      prenom,
+      email: formData.email,
+      motDePasse: formData.motDePasse
+    };
+
+    try {
+      const res = await fetch('/api/utilisateurs/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        // Succès, rediriger ou afficher un message
+        alert('Inscription réussie !');
+      } else {
+        alert(data.message || 'Erreur lors de l\'inscription');
+      }
+    } catch (err) {
+      alert('Erreur réseau');
+    }
   };
 
   const advantages = [

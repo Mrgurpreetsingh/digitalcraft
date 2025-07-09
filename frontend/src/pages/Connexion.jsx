@@ -240,9 +240,29 @@ const ConnexionPage = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Données de connexion:', formData);
+    const payload = {
+      email: formData.email,
+      motDePasse: formData.motDePasse
+    };
+    try {
+      const res = await fetch('/api/utilisateurs/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        localStorage.setItem('token', data.data.token);
+        alert('Connexion réussie !');
+        // Rediriger ou mettre à jour le contexte utilisateur ici
+      } else {
+        alert(data.message || 'Erreur lors de la connexion');
+      }
+    } catch (err) {
+      alert('Erreur réseau');
+    }
   };
 
   const advantages = [
