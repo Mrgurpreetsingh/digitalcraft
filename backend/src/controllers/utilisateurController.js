@@ -1,136 +1,43 @@
 // src/controllers/utilisateurController.js
-const UtilisateurModel = require('../models/utilisateurModel');
+const mysql = require('mysql2');
+const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const config = require('../config/config');
-const { validationResult } = require('express-validator');
+
+// Configuration de la base de données (à adapter selon ta config)
+const db = mysql.createConnection({
+  host: 'localhost',
+  user: 'root',
+  password: 'password',
+  database: 'digitalcraft'
+});
 
 class UtilisateurController {
-  // Connexion
-  static async login(req, res) {
-    try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({
-          success: false,
-          message: 'Données invalides',
-          errors: errors.array()
-        });
-      }
-
-      const { email, motDePasse } = req.body;
-
-      // Vérifier si l'utilisateur existe
-      const user = await UtilisateurModel.getByEmail(email);
-      if (!user) {
-        return res.status(401).json({
-          success: false,
-          message: 'Email ou mot de passe incorrect'
-        });
-      }
-
-      // Vérifier le mot de passe
-      const isPasswordValid = await UtilisateurModel.verifyPassword(motDePasse, user.motDePasse);
-      if (!isPasswordValid) {
-        return res.status(401).json({
-          success: false,
-          message: 'Email ou mot de passe incorrect'
-        });
-      }
-
-      // Générer le token JWT
-      const token = jwt.sign(
-        { 
-          id: user.idUtilisateur, 
-          email: user.email, 
-          role: user.role 
-        },
-        config.JWT_SECRET,
-        { expiresIn: config.JWT_EXPIRES_IN }
-      );
-
-      res.json({
-        success: true,
-        message: 'Connexion réussie',
-        data: {
-          token,
-          user: {
-            id: user.idUtilisateur,
-            email: user.email,
-            nom: user.nom,
-            prenom: user.prenom,
-            role: user.role
-          }
-        }
-      });
-    } catch (error) {
-      console.error('Erreur lors de la connexion:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erreur interne du serveur'
-      });
-    }
-  }
-
-  // Inscription
-  static async register(req, res) {
-    try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({
-          success: false,
-          message: 'Données invalides',
-          errors: errors.array()
-        });
-      }
-
-      const { email, nom, prenom, motDePasse, role } = req.body;
-
-      // Vérifier si l'email existe déjà
-      const emailExists = await UtilisateurModel.emailExists(email);
-      if (emailExists) {
-        return res.status(409).json({
-          success: false,
-          message: 'Cette adresse email est déjà utilisée'
-        });
-      }
-
-      // Créer l'utilisateur
-      const userId = await UtilisateurModel.create({
-        email,
-        nom,
-        prenom,
-        motDePasse,
-        role: role || 'Visiteur'
-      });
-
-      res.status(201).json({
-        success: true,
-        message: 'Utilisateur créé avec succès',
-        data: { id: userId }
-      });
-    } catch (error) {
-      console.error('Erreur lors de l\'inscription:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erreur interne du serveur'
-      });
-    }
-  }
-
+  
   // Récupérer tous les utilisateurs
   static async getAll(req, res) {
     try {
-      const users = await UtilisateurModel.getAll();
+      const query = 'SELECT idUtilisateur, email, nom, prenom, role, dateCreation FROM Utilisateur';
       
-      res.json({
-        success: true,
-        data: users
+      db.query(query, (error, results) => {
+        if (error) {
+          console.log('Erreur SQL:', error);
+          return res.status(500).json({ 
+            success: false, 
+            message: 'Erreur serveur' 
+          });
+        }
+        
+        res.json({
+          success: true,
+          data: results
+        });
       });
+      
     } catch (error) {
-      console.error('Erreur lors de la récupération des utilisateurs:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erreur interne du serveur'
+      console.log('Erreur:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erreur serveur' 
       });
     }
   }
@@ -139,85 +46,203 @@ class UtilisateurController {
   static async getById(req, res) {
     try {
       const { id } = req.params;
-      const user = await UtilisateurModel.getById(id);
-
-      if (!user) {
-        return res.status(404).json({
-          success: false,
-          message: 'Utilisateur non trouvé'
+      const query = 'SELECT idUtilisateur, email, nom, prenom, role, dateCreation FROM Utilisateur WHERE idUtilisateur = ?';
+      
+      db.query(query, [id], (error, results) => {
+        if (error) {
+          console.log('Erreur SQL:', error);
+          return res.status(500).json({ 
+            success: false, 
+            message: 'Erreur serveur' 
+          });
+        }
+        
+        if (results.length === 0) {
+          return res.status(404).json({ 
+            success: false, 
+            message: 'Utilisateur non trouvé' 
+          });
+        }
+        
+        res.json({
+          success: true,
+          data: results[0]
         });
-      }
-
-      res.json({
-        success: true,
-        data: user
       });
+      
     } catch (error) {
-      console.error('Erreur lors de la récupération de l\'utilisateur:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erreur interne du serveur'
+      console.log('Erreur:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erreur serveur' 
       });
     }
   }
 
-  // Mettre à jour un utilisateur
-  static async update(req, res) {
+  // Créer un nouvel utilisateur
+  static async create(req, res) {
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({
-          success: false,
-          message: 'Données invalides',
-          errors: errors.array()
+      const { email, nom, prenom, motDePasse, role } = req.body;
+      
+      // Vérifications basiques
+      if (!email || !nom || !prenom || !motDePasse) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Tous les champs sont obligatoires' 
         });
       }
-
-      const { id } = req.params;
-      const { email, nom, prenom, role } = req.body;
-
-      // Vérifier si l'utilisateur existe
-      const existingUser = await UtilisateurModel.getById(id);
-      if (!existingUser) {
-        return res.status(404).json({
-          success: false,
-          message: 'Utilisateur non trouvé'
+      
+      // Hasher le mot de passe
+      const hashedPassword = await bcrypt.hash(motDePasse, 10);
+      
+      const query = 'INSERT INTO Utilisateur (email, nom, prenom, motDePasse, role) VALUES (?, ?, ?, ?, ?)';
+      const values = [email, nom, prenom, hashedPassword, role || 'Visiteur'];
+      
+      db.query(query, values, (error, results) => {
+        if (error) {
+          console.log('Erreur SQL:', error);
+          if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({ 
+              success: false, 
+              message: 'Cet email existe déjà' 
+            });
+          }
+          return res.status(500).json({ 
+            success: false, 
+            message: 'Erreur serveur' 
+          });
+        }
+        
+        res.status(201).json({
+          success: true,
+          message: 'Utilisateur créé avec succès',
+          data: { id: results.insertId }
         });
-      }
-
-      // Vérifier si l'email n'est pas déjà utilisé par un autre utilisateur
-      const emailExists = await UtilisateurModel.emailExists(email, id);
-      if (emailExists) {
-        return res.status(409).json({
-          success: false,
-          message: 'Cette adresse email est déjà utilisée'
-        });
-      }
-
-      // Mettre à jour l'utilisateur
-      const updated = await UtilisateurModel.update(id, {
-        email,
-        nom,
-        prenom,
-        role
       });
+      
+    } catch (error) {
+      console.log('Erreur:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erreur serveur' 
+      });
+    }
+  }
 
-      if (updated) {
+  // Connexion utilisateur
+  static async login(req, res) {
+    try {
+      const { email, motDePasse } = req.body;
+      
+      if (!email || !motDePasse) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Email et mot de passe requis' 
+        });
+      }
+      
+      const query = 'SELECT * FROM Utilisateur WHERE email = ?';
+      
+      db.query(query, [email], async (error, results) => {
+        if (error) {
+          console.log('Erreur SQL:', error);
+          return res.status(500).json({ 
+            success: false, 
+            message: 'Erreur serveur' 
+          });
+        }
+        
+        if (results.length === 0) {
+          return res.status(401).json({ 
+            success: false, 
+            message: 'Email ou mot de passe incorrect' 
+          });
+        }
+        
+        const user = results[0];
+        
+        // Vérifier le mot de passe
+        const isPasswordValid = await bcrypt.compare(motDePasse, user.motDePasse);
+        
+        if (!isPasswordValid) {
+          return res.status(401).json({ 
+            success: false, 
+            message: 'Email ou mot de passe incorrect' 
+          });
+        }
+        
+        // Créer le token JWT
+        const token = jwt.sign(
+          { 
+            id: user.idUtilisateur, 
+            email: user.email, 
+            role: user.role 
+          },
+          process.env.JWT_SECRET || 'secret-key',
+          { expiresIn: '24h' }
+        );
+        
         res.json({
           success: true,
-          message: 'Utilisateur mis à jour avec succès'
+          message: 'Connexion réussie',
+          data: {
+            token,
+            user: {
+              id: user.idUtilisateur,
+              email: user.email,
+              nom: user.nom,
+              prenom: user.prenom,
+              role: user.role
+            }
+          }
         });
-      } else {
-        res.status(500).json({
-          success: false,
-          message: 'Erreur lors de la mise à jour'
-        });
-      }
+      });
+      
     } catch (error) {
-      console.error('Erreur lors de la mise à jour de l\'utilisateur:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erreur interne du serveur'
+      console.log('Erreur:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erreur serveur' 
+      });
+    }
+  }
+
+  // Modifier un utilisateur
+  static async update(req, res) {
+    try {
+      const { id } = req.params;
+      const { email, nom, prenom, role } = req.body;
+      
+      const query = 'UPDATE Utilisateur SET email = ?, nom = ?, prenom = ?, role = ? WHERE idUtilisateur = ?';
+      const values = [email, nom, prenom, role, id];
+      
+      db.query(query, values, (error, results) => {
+        if (error) {
+          console.log('Erreur SQL:', error);
+          return res.status(500).json({ 
+            success: false, 
+            message: 'Erreur serveur' 
+          });
+        }
+        
+        if (results.affectedRows === 0) {
+          return res.status(404).json({ 
+            success: false, 
+            message: 'Utilisateur non trouvé' 
+          });
+        }
+        
+        res.json({
+          success: true,
+          message: 'Utilisateur modifié avec succès'
+        });
+      });
+      
+    } catch (error) {
+      console.log('Erreur:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erreur serveur' 
       });
     }
   }
@@ -226,117 +251,36 @@ class UtilisateurController {
   static async delete(req, res) {
     try {
       const { id } = req.params;
-
-      // Vérifier si l'utilisateur existe
-      const existingUser = await UtilisateurModel.getById(id);
-      if (!existingUser) {
-        return res.status(404).json({
-          success: false,
-          message: 'Utilisateur non trouvé'
-        });
-      }
-
-      // Supprimer l'utilisateur
-      const deleted = await UtilisateurModel.delete(id);
-
-      if (deleted) {
+      
+      const query = 'DELETE FROM Utilisateur WHERE idUtilisateur = ?';
+      
+      db.query(query, [id], (error, results) => {
+        if (error) {
+          console.log('Erreur SQL:', error);
+          return res.status(500).json({ 
+            success: false, 
+            message: 'Erreur serveur' 
+          });
+        }
+        
+        if (results.affectedRows === 0) {
+          return res.status(404).json({ 
+            success: false, 
+            message: 'Utilisateur non trouvé' 
+          });
+        }
+        
         res.json({
           success: true,
           message: 'Utilisateur supprimé avec succès'
         });
-      } else {
-        res.status(500).json({
-          success: false,
-          message: 'Erreur lors de la suppression'
-        });
-      }
-    } catch (error) {
-      console.error('Erreur lors de la suppression de l\'utilisateur:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erreur interne du serveur'
       });
-    }
-  }
-
-  // Profil utilisateur (utilisateur connecté)
-  static async getProfile(req, res) {
-    try {
-      const userId = req.user.id;
-      const user = await UtilisateurModel.getById(userId);
-
-      if (!user) {
-        return res.status(404).json({
-          success: false,
-          message: 'Utilisateur non trouvé'
-        });
-      }
-
-      res.json({
-        success: true,
-        data: user
-      });
+      
     } catch (error) {
-      console.error('Erreur lors de la récupération du profil:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erreur interne du serveur'
-      });
-    }
-  }
-
-  // Changer le mot de passe
-  static async changePassword(req, res) {
-    try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({
-          success: false,
-          message: 'Données invalides',
-          errors: errors.array()
-        });
-      }
-
-      const userId = req.user.id;
-      const { motDePasseActuel, nouveauMotDePasse } = req.body;
-
-      // Récupérer l'utilisateur avec son mot de passe
-      const user = await UtilisateurModel.getByEmail(req.user.email);
-      if (!user) {
-        return res.status(404).json({
-          success: false,
-          message: 'Utilisateur non trouvé'
-        });
-      }
-
-      // Vérifier l'ancien mot de passe
-      const isCurrentPasswordValid = await UtilisateurModel.verifyPassword(motDePasseActuel, user.motDePasse);
-      if (!isCurrentPasswordValid) {
-        return res.status(400).json({
-          success: false,
-          message: 'Mot de passe actuel incorrect'
-        });
-      }
-
-      // Mettre à jour le mot de passe
-      const updated = await UtilisateurModel.updatePassword(userId, nouveauMotDePasse);
-
-      if (updated) {
-        res.json({
-          success: true,
-          message: 'Mot de passe changé avec succès'
-        });
-      } else {
-        res.status(500).json({
-          success: false,
-          message: 'Erreur lors du changement de mot de passe'
-        });
-      }
-    } catch (error) {
-      console.error('Erreur lors du changement de mot de passe:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erreur interne du serveur'
+      console.log('Erreur:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erreur serveur' 
       });
     }
   }
