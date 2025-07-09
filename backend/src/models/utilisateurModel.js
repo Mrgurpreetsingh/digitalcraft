@@ -22,9 +22,9 @@ class UtilisateurModel {
   // Récupérer tous les utilisateurs
   static async getAll() {
     const query = `
-      SELECT idUtilisateur, email, nom, prenom, role, dateCreation, dateMaj
+      SELECT idUtilisateur, email, nom, prenom, role, dateCreation
       FROM Utilisateur
-      ORDER BY dateCreation DESC
+      ORDER BY nom, prenom
     `;
     
     return await executeQuery(query);
@@ -33,7 +33,7 @@ class UtilisateurModel {
   // Récupérer un utilisateur par ID
   static async getById(id) {
     const query = `
-      SELECT idUtilisateur, email, nom, prenom, role, dateCreation, dateMaj
+      SELECT idUtilisateur, email, nom, prenom, role, dateCreation
       FROM Utilisateur
       WHERE idUtilisateur = ?
     `;
@@ -42,10 +42,10 @@ class UtilisateurModel {
     return result[0] || null;
   }
 
-  // Récupérer un utilisateur par email (avec mot de passe pour login)
+  // Récupérer un utilisateur par email (pour login)
   static async getByEmail(email) {
     const query = `
-      SELECT idUtilisateur, email, nom, prenom, motDePasse, role, dateCreation, dateMaj
+      SELECT idUtilisateur, email, nom, prenom, motDePasse, role
       FROM Utilisateur
       WHERE email = ?
     `;
@@ -68,20 +68,6 @@ class UtilisateurModel {
     return result.affectedRows > 0;
   }
 
-  // Mettre à jour le mot de passe
-  static async updatePassword(id, newPassword) {
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    
-    const query = `
-      UPDATE Utilisateur
-      SET motDePasse = ?
-      WHERE idUtilisateur = ?
-    `;
-    
-    const result = await executeQuery(query, [hashedPassword, id]);
-    return result.affectedRows > 0;
-  }
-
   // Supprimer un utilisateur
   static async delete(id) {
     const query = `
@@ -93,54 +79,21 @@ class UtilisateurModel {
     return result.affectedRows > 0;
   }
 
-  // Vérifier si un email existe
-  static async emailExists(email, excludeId = null) {
-    let query = `
-      SELECT COUNT(*) as count
-      FROM Utilisateur
-      WHERE email = ?
-    `;
-    
-    let params = [email];
-    
-    if (excludeId) {
-      query += ` AND idUtilisateur != ?`;
-      params.push(excludeId);
-    }
-    
-    const result = await executeQuery(query, params);
-    return result[0].count > 0;
-  }
-
   // Vérifier le mot de passe
   static async verifyPassword(plainPassword, hashedPassword) {
     return await bcrypt.compare(plainPassword, hashedPassword);
   }
 
-  // Récupérer les utilisateurs par rôle
-  static async getByRole(role) {
+  // Vérifier si un email existe déjà
+  static async emailExists(email) {
     const query = `
-      SELECT idUtilisateur, email, nom, prenom, role, dateCreation, dateMaj
+      SELECT COUNT(*) as count
       FROM Utilisateur
-      WHERE role = ?
-      ORDER BY nom, prenom
+      WHERE email = ?
     `;
     
-    return await executeQuery(query, [role]);
-  }
-
-  // Statistiques utilisateurs
-  static async getStats() {
-    const query = `
-      SELECT 
-        role,
-        COUNT(*) as nombre,
-        MAX(dateCreation) as dernierInscrit
-      FROM Utilisateur
-      GROUP BY role
-    `;
-    
-    return await executeQuery(query);
+    const result = await executeQuery(query, [email]);
+    return result[0].count > 0;
   }
 }
 
