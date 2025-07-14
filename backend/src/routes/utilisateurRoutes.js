@@ -1,7 +1,11 @@
-// src/routes/utilisateurRoutes.js
 const express = require('express');
 const router = express.Router();
 const UtilisateurController = require('../controllers/utilisateurController');
+
+// Débogage
+console.log('UtilisateurController:', UtilisateurController);
+console.log('Methods available:', Object.getOwnPropertyNames(UtilisateurController)); // Vérifie les méthodes statiques
+
 const { authenticateToken, requireAdmin, requireOwnershipOrAdmin } = require('../middleware/auth');
 const { 
   validateUserRegistration, 

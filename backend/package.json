@@ -10,25 +10,31 @@
   },
   "type": "commonjs",
   "dependencies": {
+    "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "dotenv": "^17.1.0",
-    "express": "^5.1.0",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.1",
+    "express-validator": "^7.0.1",
     "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1",
     "mysql2": "^3.14.1",
     "sequelize": "^6.37.7",
-    "sequelize-cli": "^6.6.3",
-    "jsonwebtoken": "^9.0.2",
-    "bcrypt": "^5.1.1",
-    "express-validator": "^7.0.1",
-    "multer": "^1.4.5-lts.1",
-    "express-rate-limit": "^7.1.5"
+    "sequelize-cli": "^6.6.3"
   },
   "devDependencies": {
     "concurrently": "^9.2.0",
     "nodemon": "^3.1.10"
   },
-  "keywords": ["digitalcraft", "api", "mvc", "express", "mysql"],
+  "keywords": [
+    "digitalcraft",
+    "api",
+    "mvc",
+    "express",
+    "mysql"
+  ],
   "author": "Votre nom",
   "license": "ISC"
 }

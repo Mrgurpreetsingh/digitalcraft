@@ -175,8 +175,8 @@ function ContactPage() {
     conditions: false,
     recaptcha: false
   });
-
   const [focusedField, setFocusedField] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -194,11 +194,55 @@ function ContactPage() {
     setFocusedField(null);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
-    // Logic de soumission du formulaire
-    alert('Message envoyé avec succès !');
+    if (!formData.conditions) {
+      alert("Vous devez accepter les conditions d'utilisation.");
+      return;
+    }
+    if (!formData.recaptcha) {
+      alert("Veuillez confirmer que vous n'êtes pas un robot.");
+      return;
+    }
+    if (!formData.nom || !formData.prenom || !formData.email || !formData.typeProjet || !formData.message) {
+      alert('Veuillez remplir tous les champs obligatoires.');
+      return;
+    }
+    setLoading(true);
+    const payload = {
+      nomVisiteur: formData.nom,
+      prenomVisiteur: formData.prenom,
+      emailVisiteur: formData.email,
+      titre: formData.typeProjet,
+      description: formData.message
+    };
+    try {
+      const res = await fetch('/api/contacts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('Votre message a bien été envoyé !');
+        setFormData({
+          nom: '',
+          prenom: '',
+          email: '',
+          telephone: '',
+          typeProjet: '',
+          message: '',
+          conditions: false,
+          recaptcha: false
+        });
+      } else {
+        alert(data.message || 'Erreur lors de l\'envoi du message');
+      }
+    } catch {
+      alert('Erreur réseau');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -358,6 +402,7 @@ function ContactPage() {
             onMouseEnter={(e) => e.target.style.backgroundColor = styles.submitButtonHover.backgroundColor}
             onMouseLeave={(e) => e.target.style.backgroundColor = styles.submitButton.backgroundColor}
             onClick={handleSubmit}
+            disabled={loading}
           >
             ✉️ Envoyer le message
           </button>

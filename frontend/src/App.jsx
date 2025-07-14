@@ -7,6 +7,9 @@ import ContactPage from './pages/ContactPage.jsx';
 import InscriptionPage from './pages/Inscription.jsx';
 import ConnexionPage from './pages/Connexion.jsx';
 import DevisPage from './pages/Devis.jsx';
+import Profil from './pages/Profil.jsx';
+import AdminDashboard from './pages/AdminDashboard.jsx';
+import EmployeeDashboard from './pages/EmployeeDashboard.jsx';
 import Footer from './components/Footer';
 
 function App() {
@@ -21,6 +24,9 @@ function App() {
           <Route path="/inscription" element={<InscriptionPage />} />
           <Route path="/connexion" element={<ConnexionPage />} />
           <Route path="/devis" element={<DevisPage />} />
+          <Route path="/profil" element={<Profil />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/employee" element={<EmployeeDashboard />} />
         </Routes>
         <Footer />
       </div>

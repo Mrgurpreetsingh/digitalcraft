@@ -124,7 +124,6 @@ const AdminDashboard = () => {
 
   return (
     <>
-      <Navbar />
       <DashboardContainer>
         <Header>
           <Title>Tableau de Bord Admin</Title>
@@ -175,7 +174,6 @@ const AdminDashboard = () => {
           </Table>
         </TableContainer>
       </DashboardContainer>
-      <Footer />
     </>
   );
 };

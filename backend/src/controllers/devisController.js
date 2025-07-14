@@ -1,13 +1,9 @@
 // src/controllers/devisController.js
 const mysql = require('mysql2');
+const DevisModel = require('../models/devisModel'); // à ajouter en haut
 
 // Configuration de la base de données (à adapter selon ta config)
-const db = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: 'password',
-  database: 'digitalcraft'
-});
+const db = require('../config/database');
 
 class DevisController {
   
@@ -101,7 +97,6 @@ class DevisController {
   static async create(req, res) {
     try {
       const { 
-        numeroDevis, 
         nomDemandeur, 
         prenomDemandeur, 
         emailDemandeur, 
@@ -113,12 +108,15 @@ class DevisController {
       } = req.body;
       
       // Vérifications basiques
-      if (!numeroDevis || !nomDemandeur || !prenomDemandeur || !emailDemandeur || !budgetEstime || !description || !typeServiceId) {
+      if (!nomDemandeur || !prenomDemandeur || !emailDemandeur || !budgetEstime || !description || !typeServiceId) {
         return res.status(400).json({ 
           success: false, 
           message: 'Tous les champs obligatoires doivent être remplis' 
         });
       }
+
+      // Générer le numéro de devis unique
+      const numeroDevis = await DevisModel.generateNumeroDevis();
       
       const query = `
         INSERT INTO Devis 
@@ -137,4 +135,93 @@ class DevisController {
             });
           }
           return res.status(500).json({ 
-            success: false,
+            success: false, 
+            message: 'Erreur serveur' 
+          });
+        }
+        res.status(201).json({
+          success: true,
+          message: 'Devis créé avec succès',
+          data: { id: results.insertId, numeroDevis }
+        });
+      });
+    } catch (error) {
+      console.log('Erreur:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erreur serveur' 
+      });
+    }
+  }
+
+  // Mettre à jour un devis
+  static async update(req, res) {
+    try {
+      const { id } = req.params;
+      const { statut } = req.body;
+
+      if (!statut) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Le statut doit être spécifié' 
+        });
+      }
+
+      const query = `
+        UPDATE Devis SET statut = ? WHERE idDevis = ?
+      `;
+      const values = [statut, id];
+
+      db.query(query, values, (error, results) => {
+        if (error) {
+          console.log('Erreur SQL:', error);
+          return res.status(500).json({ 
+            success: false, 
+            message: 'Erreur serveur' 
+          });
+        }
+        res.json({
+          success: true,
+          message: 'Devis mis à jour avec succès'
+        });
+      });
+    } catch (error) {
+      console.log('Erreur:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erreur serveur' 
+      });
+    }
+  }
+
+  // Supprimer un devis
+  static async delete(req, res) {
+    try {
+      const { id } = req.params;
+      const query = `
+        DELETE FROM Devis WHERE idDevis = ?
+      `;
+      db.query(query, [id], (error, results) => {
+        if (error) {
+          console.log('Erreur SQL:', error);
+          return res.status(500).json({ 
+            success: false, 
+            message: 'Erreur serveur' 
+          });
+        }
+        res.json({
+          success: true,
+          message: 'Devis supprimé avec succès'
+        });
+      });
+    } catch (error) {
+      console.log('Erreur:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erreur serveur' 
+      });
+    }
+  }
+}
+
+module.exports = DevisController;

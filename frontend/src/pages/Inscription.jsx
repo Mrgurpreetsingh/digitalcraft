@@ -241,7 +241,8 @@ function splitNomComplet(nomComplet) {
 
 const InscriptionPage = () => {
   const [formData, setFormData] = useState({
-    nomComplet: '',
+    nom: '',
+    prenom: '',
     email: '',
     motDePasse: '',
     confirmerMotDePasse: '',
@@ -260,20 +261,16 @@ const InscriptionPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const { prenom, nom } = splitNomComplet(formData.nomComplet);
-
-    if (!prenom || !nom) {
-      alert("Veuillez saisir un prénom et un nom (ex: Jean Dupont)");
+    if (!formData.nom || !formData.prenom) {
+      alert("Veuillez saisir votre nom et prénom.");
       return;
     }
-
     const payload = {
-      nom,
-      prenom,
+      nom: formData.nom,
+      prenom: formData.prenom,
       email: formData.email,
       motDePasse: formData.motDePasse
     };
-
     try {
       const res = await fetch('/api/utilisateurs/register', {
         method: 'POST',
@@ -282,12 +279,11 @@ const InscriptionPage = () => {
       });
       const data = await res.json();
       if (data.success) {
-        // Succès, rediriger ou afficher un message
         alert('Inscription réussie !');
       } else {
         alert(data.message || 'Erreur lors de l\'inscription');
       }
-    } catch (err) {
+    } catch {
       alert('Erreur réseau');
     }
   };
@@ -336,22 +332,41 @@ const InscriptionPage = () => {
           </div>
 
           <div>
-            {/* Champ Nom complet */}
-            <div style={styles.fieldContainer}>
-              <label style={styles.label}>
-                Nom complet <span style={styles.required}>*</span>
-              </label>
-              <div style={styles.inputContainer}>
-                <User style={styles.inputIcon} />
-                <input
-                  type="text"
-                  name="nomComplet"
-                  value={formData.nomComplet}
-                  onChange={handleInputChange}
-                  placeholder="Votre nom complet"
-                  style={styles.input}
-                  required
-                />
+            {/* Champs Nom et Prénom sur la même ligne */}
+            <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+              <div style={{ flex: 1 }}>
+                <label style={styles.label}>
+                  Prénom <span style={styles.required}>*</span>
+                </label>
+                <div style={styles.inputContainer}>
+                  <User style={styles.inputIcon} />
+                  <input
+                    type="text"
+                    name="prenom"
+                    value={formData.prenom}
+                    onChange={handleInputChange}
+                    placeholder="Votre prénom"
+                    style={styles.input}
+                    required
+                  />
+                </div>
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={styles.label}>
+                  Nom <span style={styles.required}>*</span>
+                </label>
+                <div style={styles.inputContainer}>
+                  <User style={styles.inputIcon} />
+                  <input
+                    type="text"
+                    name="nom"
+                    value={formData.nom}
+                    onChange={handleInputChange}
+                    placeholder="Votre nom"
+                    style={styles.input}
+                    required
+                  />
+                </div>
               </div>
             </div>
 

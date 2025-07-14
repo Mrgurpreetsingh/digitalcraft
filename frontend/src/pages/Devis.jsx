@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, Mail, FileText, Send, Eye, EyeOff } from 'lucide-react';
 
 // Styles CSS natifs
@@ -216,11 +216,19 @@ const DevisPage = () => {
   const [formData, setFormData] = useState({
     nomComplet: '',
     email: '',
-    typeService: '',
+    typeServiceId: '',
     budgetEstime: '',
-    descriptionProjet: '',
+    description: '',
     pasUnRobot: false
   });
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/services')
+      .then(res => res.json())
+      .then(data => setServices(data.data || []));
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -230,18 +238,64 @@ const DevisPage = () => {
     }));
   };
 
-  const handleSubmit = () => {
-    console.log('Demande de devis:', formData);
-  };
+  function splitNomComplet(nomComplet) {
+    const parts = nomComplet.trim().split(' ');
+    if (parts.length === 1) return { prenom: '', nom: parts[0] };
+    const nom = parts.pop();
+    const prenom = parts.join(' ');
+    return { prenom, nom };
+  }
 
-  const servicesOptions = [
-    { value: 'web-design', label: 'Création de site web' },
-    { value: 'mobile-app', label: 'Application mobile' },
-    { value: 'branding', label: 'Identité visuelle' },
-    { value: 'marketing', label: 'Marketing digital' },
-    { value: 'consulting', label: 'Conseil stratégique' },
-    { value: 'autre', label: 'Autre' }
-  ];
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.pasUnRobot) {
+      alert('Veuillez confirmer que vous n’êtes pas un robot.');
+      return;
+    }
+    const { prenom, nom } = splitNomComplet(formData.nomComplet);
+    if (!prenom || !nom) {
+      alert('Veuillez saisir un prénom et un nom (ex: Jean Dupont)');
+      return;
+    }
+    if (!formData.typeServiceId) {
+      alert('Veuillez sélectionner un service.');
+      return;
+    }
+    setLoading(true);
+    const payload = {
+      nomDemandeur: nom,
+      prenomDemandeur: prenom,
+      emailDemandeur: formData.email,
+      budgetEstime: formData.budgetEstime,
+      description: formData.description,
+      typeServiceId: formData.typeServiceId
+    };
+    try {
+      const res = await fetch('/api/devis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('Votre demande de devis a bien été envoyée !');
+        setFormData({
+          nomComplet: '',
+          email: '',
+          typeServiceId: '',
+          budgetEstime: '',
+          description: '',
+          pasUnRobot: false
+        });
+      } else {
+        alert(data.message || 'Erreur lors de la demande de devis');
+      }
+    } catch (err) {
+      alert('Erreur réseau');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const budgetOptions = [
     { value: '0-5000', label: '0€ - 5 000€' },
@@ -337,16 +391,16 @@ const DevisPage = () => {
               </label>
               <div style={styles.inputContainer}>
                 <select
-                  name="typeService"
-                  value={formData.typeService}
+                  name="typeServiceId"
+                  value={formData.typeServiceId}
                   onChange={handleInputChange}
                   style={styles.select}
                   required
                 >
                   <option value="">Sélectionnez un service</option>
-                  {servicesOptions.map((option, index) => (
-                    <option key={index} value={option.value}>
-                      {option.label}
+                  {services.map((service) => (
+                    <option key={service.idService} value={service.idService}>
+                      {service.titre}
                     </option>
                   ))}
                 </select>
@@ -382,8 +436,8 @@ const DevisPage = () => {
                 Description du projet <span style={styles.required}>*</span>
               </label>
               <textarea
-                name="descriptionProjet"
-                value={formData.descriptionProjet}
+                name="description"
+                value={formData.description}
                 onChange={handleInputChange}
                 placeholder="Décrivez votre projet, vos objectifs et vos besoins spécifiques..."
                 style={styles.textarea}
@@ -412,9 +466,10 @@ const DevisPage = () => {
               onClick={handleSubmit}
               onMouseEnter={(e) => e.target.style.backgroundColor = styles.buttonHover.backgroundColor}
               onMouseLeave={(e) => e.target.style.backgroundColor = styles.button.backgroundColor}
+              disabled={loading}
             >
               <Send size={20} />
-              <span>Soumettre ma demande</span>
+              <span>{loading ? 'Envoi...' : 'Soumettre ma demande'}</span>
             </button>
 
             {/* Note de confidentialité */}
