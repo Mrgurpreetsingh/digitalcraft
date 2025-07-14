@@ -386,7 +386,7 @@ const ConnexionPage = () => {
             <div style={styles.divider}>
               <p style={styles.dividerText}>ou</p>
               <p style={styles.signupText}>
-                Pas encore inscrit ? <a href="#" style={styles.link}>Inscrivez-vous</a>
+                Pas encore inscrit ? <a href="/inscription" style={styles.link}>Inscrivez-vous</a>
               </p>
             </div>
           </div>

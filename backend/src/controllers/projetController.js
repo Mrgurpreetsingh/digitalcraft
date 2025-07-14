@@ -2,12 +2,7 @@
 const mysql = require('mysql2');
 
 // Configuration de la base de données (à adapter selon ta config)
-const db = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: 'password',
-  database: 'digitalcraft'
-});
+const db = require('../config/database');
 
 class ProjetController {
   
