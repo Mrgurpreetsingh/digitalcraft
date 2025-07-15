@@ -1,29 +1,38 @@
 import React from 'react';
 import '../styles/Services.css';
 import Button from '../components/Button';
-import ServiceCard from '../components/ServiceCard';
+import ServicesGrid from '../components/ServicesGrid';
+import ServiceHero from '../components/ServiceHero';
 
 function Services() {
   const servicesData = [
     {
+      id: 1,
+      icon: '💻',
       title: 'Création de Sites Web',
       description: 'Sites web modernes et performants, adaptés à tous les appareils. Nous créons des expériences utilisateur exceptionnelles qui convertissent vos visiteurs en clients. De la vitrine corporate au e-commerce complexe.',
       items: ['Design responsive', 'Performance optimale', 'Optimisation SEO', 'CMS intégré'],
       linkText: 'En savoir plus',
     },
     {
+      id: 2,
+      icon: '📱',
       title: 'Applications Mobiles',
       description: 'Applications natives et cross-platform pour iOS et Android. Interface intuitive, performance optimale et intégration parfaite avec vos systèmes existants. De l\'idée au déploiement sur les stores.',
       items: ['iOS & Android', 'API intégration', 'UX/UI moderne', 'Maintenance incluse'],
       linkText: 'En savoir plus',
     },
     {
+      id: 3,
+      icon: '📈',
       title: 'Marketing Digital',
       description: 'Stratégies marketing complètes pour maximiser votre visibilité en ligne. SEO, publicité payante, email marketing et analytics pour mesurer votre ROI. Nous transformons votre audience en clients fidèles.',
       items: ['Stratégie SEO/SEA', 'Email marketing', 'Analytics & reporting', 'Conversion optimization'],
       linkText: 'En savoir plus',
     },
     {
+      id: 4,
+      icon: '📊',
       title: 'Gestion Réseaux Sociaux',
       description: 'Développez votre communauté et engagez votre audience sur tous les réseaux sociaux. Création de contenu, planning éditorial, community management et campagnes publicitaires ciblées pour maximiser votre impact.',
       items: ['Stratégie de contenu', 'Community management', 'Publicité ciblée', 'Analyse performance'],
@@ -32,33 +41,31 @@ function Services() {
   ];
 
   return (
-    <main>
-      <section className="services-section blue-bg">
-        <h1>Prêt à Transformer Votre Entreprise ?</h1>
-        <p>Discutons de vos projets et découvrons ensemble comment nos services peuvent propulser votre croissance digitale.</p>
-        <Button>Demander un devis</Button>
-        <p>ou appelez-nous directement au <a href="tel:+33123456789">+33 1 23 45 67 89</a></p>
-      </section>
-      <section className="services-section">
-        <h1>Nos Expertises Digitales</h1>
-        <p>Chaque service est conçu pour répondre à vos besoins spécifiques et faire croître votre activité</p>
-        <div className="services-grid">
-          {servicesData.map((service, index) => (
-            <ServiceCard
-              key={index}
-              title={service.title}
-              description={service.description}
-              items={service.items}
-              linkText={service.linkText}
-            />
-          ))}
+    <main className="services-main">
+      {/* Service 1 - Hero Section */}
+      <ServiceHero 
+        title="Nos Services pour Votre Succès"
+        subtitle="Découvrez nos expertises en création digitale"
+        description="Des solutions sur mesure pour propulser votre entreprise dans l'ère numérique"
+        buttonText="Contacter un expert"
+      />
+
+      {/* Service 2 - Grille des services */}
+      <section className="services-content">
+        <div className="services-header">
+          <h2>Nos Expertises Digitales</h2>
+          <p>Chaque service est conçu pour répondre à vos besoins spécifiques et faire croître votre activité</p>
         </div>
+        <ServicesGrid services={servicesData} />
       </section>
-      <section className="services-section blue-bg">
-        <h1>Nos Services pour Votre Succès</h1>
-        <p>Découvrez nos expertises en création digitale</p>
-        <p>Des solutions sur mesure pour propulser votre entreprise dans l'ère numérique</p>
-        <Button>Contacter un expert</Button>
+
+      {/* Service 3 - CTA Section */}
+      <section className="services-cta">
+        <div className="cta-content">
+          <h2>Prêt à Transformer Votre Entreprise ?</h2>
+          <p>Discutons de vos projets et découvrons ensemble comment nos services peuvent propulser votre croissance digitale.</p>
+          <Button>Demander un devis</Button>
+        </div>
       </section>
     </main>
   );
