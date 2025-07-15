@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { User, Mail, Lock, LogIn, Eye, EyeOff } from 'lucide-react';
+import ReCAPTCHA from 'react-google-recaptcha';
+import axios from 'axios';
 
 // Styles CSS natifs
 const styles = {
@@ -228,31 +230,37 @@ const ConnexionPage = () => {
   const [formData, setFormData] = useState({
     email: '',
     motDePasse: '',
-    seSouvenirDeMoi: false
+    seSouvenirDeMoi: false,
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState(null);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === 'checkbox' ? checked : value,
     }));
+  };
+
+  const handleCaptchaChange = (token) => {
+    setCaptchaToken(token);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!captchaToken) {
+      alert('Veuillez vérifier le reCAPTCHA.');
+      return;
+    }
     const payload = {
       email: formData.email,
-      motDePasse: formData.motDePasse
+      motDePasse: formData.motDePasse,
+      token: captchaToken,
     };
     try {
-      const res = await fetch('/api/utilisateurs/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json();
+      const res = await axios.post('/api/utilisateurs/login', payload);
+      const data = res.data;
       if (data.success) {
         localStorage.setItem('token', data.data.token);
         alert('Connexion réussie !');
@@ -260,26 +268,29 @@ const ConnexionPage = () => {
       } else {
         alert(data.message || 'Erreur lors de la connexion');
       }
-    } catch (err) {
-      alert('Erreur réseau');
-    }
+    } catch (error) {
+  console.error('Erreur:', error);
+  alert('Erreur réseau ou serveur');
+}
   };
 
   const advantages = [
-    "Suivi en temps réel de vos projets",
-    "Accès à votre historique de commandes",
-    "Support client prioritaire"
+    'Suivi en temps réel de vos projets',
+    'Accès à votre historique de commandes',
+    'Support client prioritaire',
   ];
+
+  // Utilise import.meta.env.VITE_ pour Vite
+  const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LejF4MrAAAAANIX6ENamurC8EBYK9s9X0RJ3N_i';
 
   return (
     <div style={styles.container}>
-      {/* Côté gauche */}
+      {/* Côté gauche (inchangé) */}
       <div style={styles.leftSide}>
         <h1 style={styles.title}>Connexion</h1>
         <p style={styles.subtitle}>Accédez à votre compte</p>
         <p style={styles.description}>
-          Gérez vos projets, suivez l'avancement de vos commandes et 
-          accédez à votre espace client personnalisé.
+          Gérez vos projets, suivez l'avancement de vos commandes et accédez à votre espace client personnalisé.
         </p>
         <div>
           <h3 style={styles.advantagesTitle}>Avantages de votre compte :</h3>
@@ -307,7 +318,7 @@ const ConnexionPage = () => {
             <p style={styles.formSubtitle}>Entrez vos identifiants pour accéder à votre compte</p>
           </div>
 
-          <div>
+          <form onSubmit={handleSubmit}>
             {/* Champ Email */}
             <div style={styles.fieldContainer}>
               <label style={styles.label}>
@@ -335,7 +346,7 @@ const ConnexionPage = () => {
               <div style={styles.inputContainer}>
                 <Lock style={styles.inputIcon} />
                 <input
-                  type={showPassword ? "text" : "password"}
+                  type={showPassword ? 'text' : 'password'}
                   name="motDePasse"
                   value={formData.motDePasse}
                   onChange={handleInputChange}
@@ -370,14 +381,13 @@ const ConnexionPage = () => {
               </a>
             </div>
 
+            {/* reCAPTCHA */}
+            <div style={styles.fieldContainer}>
+              <ReCAPTCHA sitekey={siteKey} onChange={handleCaptchaChange} />
+            </div>
+
             {/* Bouton de connexion */}
-            <button 
-              type="submit" 
-              style={styles.button}
-              onClick={handleSubmit}
-              onMouseEnter={(e) => e.target.style.backgroundColor = styles.buttonHover.backgroundColor}
-              onMouseLeave={(e) => e.target.style.backgroundColor = styles.button.backgroundColor}
-            >
+            <button type="submit" style={styles.button}>
               <LogIn size={20} />
               <span>Se connecter</span>
             </button>
@@ -386,10 +396,13 @@ const ConnexionPage = () => {
             <div style={styles.divider}>
               <p style={styles.dividerText}>ou</p>
               <p style={styles.signupText}>
-                Pas encore inscrit ? <a href="/inscription" style={styles.link}>Inscrivez-vous</a>
+                Pas encore inscrit ?{' '}
+                <a href="/inscription" style={styles.link}>
+                  Inscrivez-vous
+                </a>
               </p>
             </div>
-          </div>
+          </form>
         </div>
       </div>
     </div>
