@@ -68,51 +68,94 @@ class UtilisateurController {
     }
   }
 
-  // Connexion utilisateur
-  static async login(req, res) {
-    try {
-      const { email, motDePasse } = req.body;
-      if (!email || !motDePasse) {
-        return res.status(400).json({ success: false, message: 'Email et mot de passe requis' });
-      }
-      
-      const results = await executeQuery('SELECT * FROM Utilisateur WHERE email = ?', [email]);
-      if (!results.length) {
-        return res.status(401).json({ success: false, message: 'Email ou mot de passe incorrect' });
-      }
-      
-      const user = results[0];
-      const isPasswordValid = await bcrypt.compare(motDePasse, user.motDePasse);
-      if (!isPasswordValid) {
-        return res.status(401).json({ success: false, message: 'Email ou mot de passe incorrect' });
-      }
-      
-      const token = jwt.sign(
-        { id: user.idUtilisateur, email: user.email, role: user.role }, 
-        process.env.JWT_SECRET || 'secret-key', 
-        { expiresIn: '24h' }
-      );
-      
-      res.json({
-        success: true,
-        message: 'Connexion réussie',
-        data: { 
-          token, 
-          user: { 
-            id: user.idUtilisateur, 
-            email: user.email, 
-            nom: user.nom, 
-            prenom: user.prenom, 
-            role: user.role 
-          } 
-        }
+// Méthode login améliorée avec plus de logs
+static async login(req, res) {
+  try {
+    console.log('=== DEBUT LOGIN ===');
+    console.log('Body reçu:', { ...req.body, motDePasse: '[MASQUÉ]' });
+    console.log('Headers:', req.headers);
+    
+    const { email, motDePasse } = req.body;
+    
+    if (!email || !motDePasse) {
+      console.log('❌ Champs manquants - email:', !!email, 'motDePasse:', !!motDePasse);
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Email et mot de passe requis' 
       });
-    } catch (error) {
-      console.log('Erreur:', error);
-      res.status(500).json({ success: false, message: 'Erreur serveur' });
     }
+    
+    console.log('🔍 Recherche utilisateur avec email:', email);
+    const results = await executeQuery('SELECT * FROM Utilisateur WHERE email = ?', [email]);
+    
+    if (!results.length) {
+      console.log('❌ Utilisateur non trouvé:', email);
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Email ou mot de passe incorrect' 
+      });
+    }
+    
+    console.log('✅ Utilisateur trouvé:', results[0].email);
+    const user = results[0];
+    
+    console.log('🔐 Vérification du mot de passe...');
+    const isPasswordValid = await bcrypt.compare(motDePasse, user.motDePasse);
+    
+    if (!isPasswordValid) {
+      console.log('❌ Mot de passe incorrect pour:', email);
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Email ou mot de passe incorrect' 
+      });
+    }
+    
+    console.log('✅ Mot de passe valide');
+    
+    // Vérifier que JWT_SECRET est présent
+    if (!process.env.JWT_SECRET) {
+      console.log('❌ JWT_SECRET non configuré');
+      return res.status(500).json({
+        success: false,
+        message: 'Configuration serveur incorrecte'
+      });
+    }
+    
+    console.log('🎫 Génération du token JWT...');
+    const token = jwt.sign(
+      { id: user.idUtilisateur, email: user.email, role: user.role }, 
+      process.env.JWT_SECRET, 
+      { expiresIn: process.env.JWT_EXPIRE || '24h' }
+    );
+    
+    console.log('✅ Token généré avec succès');
+    console.log('Connexion réussie pour:', email);
+    console.log('=== FIN LOGIN ===');
+    
+    res.json({
+      success: true,
+      message: 'Connexion réussie',
+      data: { 
+        token, 
+        user: { 
+          id: user.idUtilisateur, 
+          email: user.email, 
+          nom: user.nom, 
+          prenom: user.prenom, 
+          role: user.role 
+        } 
+      }
+    });
+  } catch (error) {
+    console.error('❌ Erreur dans login:', error);
+    console.error('Stack trace:', error.stack);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Erreur serveur',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Erreur interne'
+    });
   }
-
+}
   // Récupérer le profil de l'utilisateur connecté
   static async getProfile(req, res) {
     try {

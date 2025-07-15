@@ -477,7 +477,7 @@ const InscriptionPage = () => {
             <div style={styles.divider}>
               <p style={styles.dividerText}>ou</p>
               <p style={styles.signupText}>
-                Déjà inscrit ? <a href="#" style={styles.link}>Connectez-vous</a>
+                Déjà inscrit ? <a href="/connexion" style={styles.link}>Connectez-vous</a>
               </p>
             </div>
           </div>

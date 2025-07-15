@@ -4,7 +4,7 @@ const UtilisateurController = require('../controllers/utilisateurController');
 
 // Débogage
 console.log('UtilisateurController:', UtilisateurController);
-console.log('Methods available:', Object.getOwnPropertyNames(UtilisateurController)); // Vérifie les méthodes statiques
+console.log('Methods available:', Object.getOwnPropertyNames(UtilisateurController));
 
 const { authenticateToken, requireAdmin, requireOwnershipOrAdmin } = require('../middleware/auth');
 const { 
@@ -15,10 +15,11 @@ const {
   validateId,
   validatePagination 
 } = require('../middleware/validation');
+const verifyCaptcha = require('../middleware/verifyCaptcha');
 
 // Routes publiques
 router.post('/register', validateUserRegistration, UtilisateurController.register);
-router.post('/login', validateUserLogin, UtilisateurController.login);
+router.post('/login', validateUserLogin, verifyCaptcha, UtilisateurController.login); // Ajoute verifyCaptcha
 
 // Routes protégées - utilisateur connecté
 router.get('/profile', authenticateToken, UtilisateurController.getProfile);
