@@ -10,6 +10,7 @@ import DevisPage from './pages/Devis.jsx';
 import Profil from './pages/Profil.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';
 import EmployeeDashboard from './pages/EmployeeDashboard.jsx';
+import Portfolio from './pages/Portfolio.jsx';
 import Footer from './components/Footer';
 
 function App() {
@@ -27,6 +28,8 @@ function App() {
           <Route path="/profil" element={<Profil />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/employee" element={<EmployeeDashboard />} />
+          <Route path="/portfolio" element={<Portfolio />} />
+
         </Routes>
         <Footer />
       </div>
