@@ -1,8 +1,21 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import '../styles/Portfolio.css';
 import ProjectGrid from '../components/PortfolioGrid';
+import axios from 'axios';
 
 const Portfolio = () => {
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    axios.get('http://localhost:5000/api/projets?statut=Publié')
+      .then(res => {
+        setProjects(res.data.data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
   return (
     <div className="portfolio-container">
       {/* Section bannière bleue */}
@@ -31,7 +44,7 @@ const Portfolio = () => {
           <h2>Nos Projets Réalisés</h2>
           <p>Chaque projet raconte une histoire de réussite digitale</p>
         </div>
-        <ProjectGrid />
+        {loading ? <p>Chargement...</p> : <ProjectGrid projects={projects} />}
       </section>
     </div>
   );
