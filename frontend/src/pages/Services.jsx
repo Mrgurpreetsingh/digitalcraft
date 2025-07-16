@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../styles/Services.css';
 import Button from '../components/Button';
 import ServicesGrid from '../components/ServicesGrid';
@@ -40,17 +41,20 @@ function Services() {
     },
   ];
 
+  const navigate = useNavigate();
+
+  const handleDevisClick = () => {
+    navigate('/devis');
+  };
+
   return (
     <main className="services-main">
-      {/* Service 1 - Hero Section */}
       <ServiceHero 
         title="Nos Services pour Votre Succès"
         subtitle="Découvrez nos expertises en création digitale"
         description="Des solutions sur mesure pour propulser votre entreprise dans l'ère numérique"
         buttonText="Contacter un expert"
       />
-
-      {/* Service 2 - Grille des services */}
       <section className="services-content">
         <div className="services-header">
           <h2>Nos Expertises Digitales</h2>
@@ -58,13 +62,11 @@ function Services() {
         </div>
         <ServicesGrid services={servicesData} />
       </section>
-
-      {/* Service 3 - CTA Section */}
       <section className="services-cta">
         <div className="cta-content">
           <h2>Prêt à Transformer Votre Entreprise ?</h2>
           <p>Discutons de vos projets et découvrons ensemble comment nos services peuvent propulser votre croissance digitale.</p>
-          <Button>Demander un devis</Button>
+          <Button onClick={handleDevisClick}>Demander un devis</Button>
         </div>
       </section>
     </main>

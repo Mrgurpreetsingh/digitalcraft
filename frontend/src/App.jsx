@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Home from './pages/Home.jsx';
 import Services from './pages/Services.jsx';
@@ -12,6 +12,7 @@ import AdminDashboard from './pages/AdminDashboard.jsx';
 import EmployeeDashboard from './pages/EmployeeDashboard.jsx';
 import Portfolio from './pages/Portfolio.jsx';
 import Footer from './components/Footer';
+import ProtectedRoute from './components/ProtectedRoute'; // Ajoute ce fichier
 
 function App() {
   return (
@@ -26,10 +27,25 @@ function App() {
           <Route path="/connexion" element={<ConnexionPage />} />
           <Route path="/devis" element={<DevisPage />} />
           <Route path="/profil" element={<Profil />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/employee" element={<EmployeeDashboard />} />
           <Route path="/portfolio" element={<Portfolio />} />
-
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute allowedRoles={['Administrateur']}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/employe"
+            element={
+              <ProtectedRoute allowedRoles={['Employé']}>
+                <EmployeeDashboard />
+              </ProtectedRoute>
+            }
+          />
+          {/* Redirection par défaut vers la page de connexion si route inconnue */}
+          <Route path="*" element={<Navigate to="/connexion" />} />
         </Routes>
         <Footer />
       </div>

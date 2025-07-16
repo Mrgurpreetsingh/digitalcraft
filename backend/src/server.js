@@ -9,7 +9,6 @@ const startServer = async () => {
   try {
     // Tester la connexion à la base de données
     const dbConnected = await testConnection();
-    
     if (!dbConnected) {
       console.error('❌ Impossible de se connecter à la base de données');
       process.exit(1);
