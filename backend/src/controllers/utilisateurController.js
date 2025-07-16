@@ -2,16 +2,35 @@ const mysql = require('mysql2/promise');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { executeQuery } = require('../config/database');
+const verifyCaptcha = require('../middleware/verifyCaptcha'); // Importe le middleware
+const { body, validationResult } = require('express-validator'); // Pour express-validator
 
 class UtilisateurController {
-  // Récupérer tous les utilisateurs
+  // Récupérer tous les utilisateurs (filtrable par rôle)
   static async getAll(req, res) {
     try {
-      const results = await executeQuery('SELECT idUtilisateur, email, nom, prenom, role, dateCreation FROM Utilisateur');
-      res.json({
-        success: true,
-        data: results
-      });
+      let query = 'SELECT idUtilisateur, email, nom, prenom, role, dateCreation FROM Utilisateur';
+      const params = [];
+      if (req.query.role) {
+        query += ' WHERE role = ?';
+        params.push(req.query.role);
+      }
+      const results = await executeQuery(query, params);
+      res.json({ success: true, data: results });
+    } catch (error) {
+      console.log('Erreur:', error);
+      res.status(500).json({ success: false, message: 'Erreur serveur' });
+    }
+  }
+
+  // Récupérer seulement les employés/admins
+  static async getEmployeesAndAdmins(req, res) {
+    try {
+      const results = await executeQuery(
+        'SELECT idUtilisateur, email, nom, prenom, role, dateCreation FROM Utilisateur WHERE role IN (?, ?) ORDER BY role DESC',
+        ['Administrateur', 'Employé']
+      );
+      res.json({ success: true, data: results });
     } catch (error) {
       console.log('Erreur:', error);
       res.status(500).json({ success: false, message: 'Erreur serveur' });
@@ -33,32 +52,33 @@ class UtilisateurController {
     }
   }
 
-  // Créer un nouvel utilisateur
+  // Créer un nouvel utilisateur avec reCAPTCHA et validation
   static async register(req, res) {
     try {
-      const { email, nom, prenom, motDePasse, role } = req.body;
-      
-      if (!email || !nom || !prenom || !motDePasse) {
-        return res.status(400).json({ success: false, message: 'Tous les champs sont obligatoires' });
+      // Vérifie les erreurs de validation
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ success: false, message: 'Validation échouée', errors: errors.array() });
       }
 
-      // Vérifier si l'email existe déjà
+      const { email, nom, prenom, motDePasse, role } = req.body;
+
       const existingUser = await executeQuery('SELECT idUtilisateur FROM Utilisateur WHERE email = ?', [email]);
       if (existingUser.length > 0) {
         return res.status(409).json({ success: false, message: 'Cet email existe déjà' });
       }
 
+      let finalRole = 'Visiteur';
+      if (req.user && req.user.role === 'Administrateur' && role && ['Administrateur', 'Employé'].includes(role)) {
+        finalRole = role;
+      }
+
       const hashedPassword = await bcrypt.hash(motDePasse, 10);
       const result = await executeQuery(
-        'INSERT INTO Utilisateur (email, nom, prenom, motDePasse, role) VALUES (?, ?, ?, ?, ?)', 
-        [email, nom, prenom, hashedPassword, role || 'Visiteur']
+        'INSERT INTO Utilisateur (email, nom, prenom, motDePasse, role) VALUES (?, ?, ?, ?, ?)',
+        [email, nom, prenom, hashedPassword, finalRole]
       );
-      
-      res.status(201).json({ 
-        success: true, 
-        message: 'Utilisateur créé avec succès', 
-        data: { id: result.insertId } 
-      });
+      res.status(201).json({ success: true, message: 'Utilisateur créé', data: { id: result.insertId } });
     } catch (error) {
       console.log('Erreur:', error);
       if (error.code === 'ER_DUP_ENTRY') {
@@ -68,95 +88,60 @@ class UtilisateurController {
     }
   }
 
-// Méthode login améliorée avec plus de logs
-static async login(req, res) {
-  try {
-    console.log('=== DEBUT LOGIN ===');
-    console.log('Body reçu:', { ...req.body, motDePasse: '[MASQUÉ]' });
-    console.log('Headers:', req.headers);
-    
-    const { email, motDePasse } = req.body;
-    
-    if (!email || !motDePasse) {
-      console.log('❌ Champs manquants - email:', !!email, 'motDePasse:', !!motDePasse);
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Email et mot de passe requis' 
-      });
-    }
-    
-    console.log('🔍 Recherche utilisateur avec email:', email);
-    const results = await executeQuery('SELECT * FROM Utilisateur WHERE email = ?', [email]);
-    
-    if (!results.length) {
-      console.log('❌ Utilisateur non trouvé:', email);
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Email ou mot de passe incorrect' 
-      });
-    }
-    
-    console.log('✅ Utilisateur trouvé:', results[0].email);
-    const user = results[0];
-    
-    console.log('🔐 Vérification du mot de passe...');
-    const isPasswordValid = await bcrypt.compare(motDePasse, user.motDePasse);
-    
-    if (!isPasswordValid) {
-      console.log('❌ Mot de passe incorrect pour:', email);
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Email ou mot de passe incorrect' 
-      });
-    }
-    
-    console.log('✅ Mot de passe valide');
-    
-    // Vérifier que JWT_SECRET est présent
-    if (!process.env.JWT_SECRET) {
-      console.log('❌ JWT_SECRET non configuré');
-      return res.status(500).json({
-        success: false,
-        message: 'Configuration serveur incorrecte'
-      });
-    }
-    
-    console.log('🎫 Génération du token JWT...');
-    const token = jwt.sign(
-      { id: user.idUtilisateur, email: user.email, role: user.role }, 
-      process.env.JWT_SECRET, 
-      { expiresIn: process.env.JWT_EXPIRE || '24h' }
-    );
-    
-    console.log('✅ Token généré avec succès');
-    console.log('Connexion réussie pour:', email);
-    console.log('=== FIN LOGIN ===');
-    
-    res.json({
-      success: true,
-      message: 'Connexion réussie',
-      data: { 
-        token, 
-        user: { 
-          id: user.idUtilisateur, 
-          email: user.email, 
-          nom: user.nom, 
-          prenom: user.prenom, 
-          role: user.role 
-        } 
+  // Validation avec express-validator pour register
+  static validateRegister = [
+    body('email').isEmail().withMessage('Email invalide'),
+    body('nom').notEmpty().withMessage('Nom requis'),
+    body('prenom').notEmpty().withMessage('Prénom requis'),
+    body('motDePasse').isStrongPassword({
+      minLength: 8,
+      minLowercase: 1,
+      minUppercase: 1,
+      minNumbers: 1
+    }).withMessage('Mot de passe trop faible (8 caractères, majuscule, minuscule, chiffre)'),
+    body('recaptchaToken').notEmpty().withMessage('Token reCAPTCHA requis')
+  ];
+
+  // Login (simplifié)
+  static async login(req, res) {
+    try {
+      console.log('=== DEBUT LOGIN ===');
+      console.log('Body reçu:', { email: '[MASQUÉ]', motDePasse: '[MASQUÉ]' });
+      const { email, motDePasse } = req.body;
+      if (!email || !motDePasse) {
+        console.log('❌ Champs manquants');
+        return res.status(400).json({ success: false, message: 'Email et mot de passe requis' });
       }
-    });
-  } catch (error) {
-    console.error('❌ Erreur dans login:', error);
-    console.error('Stack trace:', error.stack);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Erreur serveur',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Erreur interne'
-    });
+      const results = await executeQuery('SELECT * FROM Utilisateur WHERE email = ?', [email]);
+      if (!results.length) {
+        console.log('❌ Utilisateur non trouvé');
+        return res.status(401).json({ success: false, message: 'Email ou mot de passe incorrect' });
+      }
+      const user = results[0];
+      const isPasswordValid = await bcrypt.compare(motDePasse, user.motDePasse);
+      if (!isPasswordValid) {
+        console.log('❌ Mot de passe incorrect');
+        return res.status(401).json({ success: false, message: 'Email ou mot de passe incorrect' });
+      }
+      if (!process.env.JWT_SECRET) {
+        console.log('❌ JWT_SECRET non configuré');
+        return res.status(500).json({ success: false, message: 'Configuration serveur incorrecte' });
+      }
+      const token = jwt.sign({ id: user.idUtilisateur, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRE || '24h' });
+      console.log('✅ Connexion réussie');
+      console.log('=== FIN LOGIN ===');
+      res.json({
+        success: true,
+        message: 'Connexion réussie',
+        data: { token, user: { id: user.idUtilisateur, email: user.email, nom: user.nom, prenom: user.prenom, role: user.role } }
+      });
+    } catch (error) {
+      console.error('❌ Erreur dans login:', error.message);
+      res.status(500).json({ success: false, message: 'Erreur serveur' });
+    }
   }
-}
-  // Récupérer le profil de l'utilisateur connecté
+
+  // Récupérer le profil
   static async getProfile(req, res) {
     try {
       const userId = req.user.id;
@@ -171,7 +156,7 @@ static async login(req, res) {
     }
   }
 
-  // Mettre à jour le profil de l'utilisateur connecté
+  // Mettre à jour le profil
   static async updateProfile(req, res) {
     try {
       const userId = req.user.id;
@@ -180,7 +165,7 @@ static async login(req, res) {
       if (result.affectedRows === 0) {
         return res.status(404).json({ success: false, message: 'Utilisateur non trouvé' });
       }
-      res.json({ success: true, message: 'Profil mis à jour avec succès' });
+      res.json({ success: true, message: 'Profil mis à jour' });
     } catch (error) {
       console.log('Erreur:', error);
       if (error.code === 'ER_DUP_ENTRY') {
@@ -190,7 +175,7 @@ static async login(req, res) {
     }
   }
 
-  // Changer le mot de passe de l'utilisateur connecté
+  // Changer le mot de passe
   static async changePassword(req, res) {
     try {
       const userId = req.user.id;
@@ -198,20 +183,17 @@ static async login(req, res) {
       if (!ancienMotDePasse || !nouveauMotDePasse) {
         return res.status(400).json({ success: false, message: 'Ancien et nouveau mot de passe requis' });
       }
-      
       const results = await executeQuery('SELECT motDePasse FROM Utilisateur WHERE idUtilisateur = ?', [userId]);
       if (!results.length) {
         return res.status(404).json({ success: false, message: 'Utilisateur non trouvé' });
       }
-      
       const isOldPasswordValid = await bcrypt.compare(ancienMotDePasse, results[0].motDePasse);
       if (!isOldPasswordValid) {
         return res.status(401).json({ success: false, message: 'Ancien mot de passe incorrect' });
       }
-      
       const hashedNewPassword = await bcrypt.hash(nouveauMotDePasse, 10);
       await executeQuery('UPDATE Utilisateur SET motDePasse = ? WHERE idUtilisateur = ?', [hashedNewPassword, userId]);
-      res.json({ success: true, message: 'Mot de passe modifié avec succès' });
+      res.json({ success: true, message: 'Mot de passe modifié' });
     } catch (error) {
       console.log('Erreur:', error);
       res.status(500).json({ success: false, message: 'Erreur serveur' });
@@ -223,11 +205,14 @@ static async login(req, res) {
     try {
       const { id } = req.params;
       const { email, nom, prenom, role } = req.body;
+      if (req.user.role !== 'Administrateur') {
+        return res.status(403).json({ success: false, message: 'Accès refusé. Seuls les admins peuvent modifier' });
+      }
       const result = await executeQuery('UPDATE Utilisateur SET email = ?, nom = ?, prenom = ?, role = ? WHERE idUtilisateur = ?', [email, nom, prenom, role, id]);
       if (result.affectedRows === 0) {
         return res.status(404).json({ success: false, message: 'Utilisateur non trouvé' });
       }
-      res.json({ success: true, message: 'Utilisateur modifié avec succès' });
+      res.json({ success: true, message: 'Utilisateur modifié' });
     } catch (error) {
       console.log('Erreur:', error);
       if (error.code === 'ER_DUP_ENTRY') {
@@ -237,28 +222,47 @@ static async login(req, res) {
     }
   }
 
-  // Supprimer un utilisateur
+  // Supprimer un utilisateur (admin)
   static async delete(req, res) {
     try {
       const { id } = req.params;
+      if (req.user.role !== 'Administrateur') {
+        return res.status(403).json({ success: false, message: 'Accès refusé. Seuls les admins peuvent supprimer' });
+      }
       const result = await executeQuery('DELETE FROM Utilisateur WHERE idUtilisateur = ?', [id]);
       if (result.affectedRows === 0) {
         return res.status(404).json({ success: false, message: 'Utilisateur non trouvé' });
       }
-      res.json({ success: true, message: 'Utilisateur supprimé avec succès' });
+      res.json({ success: true, message: 'Utilisateur supprimé' });
     } catch (error) {
       console.log('Erreur:', error);
       res.status(500).json({ success: false, message: 'Erreur serveur' });
     }
   }
 
-  // Obtenir les statistiques des utilisateurs
+  // Supprimer son propre compte
+  static async deleteSelf(req, res) {
+    try {
+      const userId = req.user.id;
+      const result = await executeQuery('DELETE FROM Utilisateur WHERE idUtilisateur = ?', [userId]);
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ success: false, message: 'Utilisateur non trouvé' });
+      }
+      res.json({ success: true, message: 'Compte supprimé' });
+    } catch (error) {
+      console.log('Erreur:', error);
+      res.status(500).json({ success: false, message: 'Erreur serveur' });
+    }
+  }
+
+  // Statistiques
   static async getUserStats(req, res) {
     try {
       const results = await executeQuery(`
         SELECT 
           COUNT(*) as totalUtilisateurs,
           COUNT(CASE WHEN role = 'Administrateur' THEN 1 END) as totalAdmins,
+          COUNT(CASE WHEN role = 'Employé' THEN 1 END) as totalEmployes,
           COUNT(CASE WHEN role = 'Visiteur' THEN 1 END) as totalVisiteurs,
           COUNT(CASE WHEN DATE(dateCreation) = CURDATE() THEN 1 END) as nouveauxAujourdhui
         FROM Utilisateur
@@ -270,19 +274,22 @@ static async login(req, res) {
     }
   }
 
-  // Changer le rôle d'un utilisateur
+  // Changer le rôle (admin seulement)
   static async changeUserRole(req, res) {
     try {
       const { id } = req.params;
       const { role } = req.body;
+      if (req.user.role !== 'Administrateur') {
+        return res.status(403).json({ success: false, message: 'Accès refusé. Seuls les admins peuvent changer les rôles' });
+      }
       if (!role || !['Administrateur', 'Employé', 'Visiteur'].includes(role)) {
-        return res.status(400).json({ success: false, message: 'Rôle invalide. Doit être Administrateur, Employé ou Visiteur' });
+        return res.status(400).json({ success: false, message: 'Rôle invalide' });
       }
       const result = await executeQuery('UPDATE Utilisateur SET role = ? WHERE idUtilisateur = ?', [role, id]);
       if (result.affectedRows === 0) {
         return res.status(404).json({ success: false, message: 'Utilisateur non trouvé' });
       }
-      res.json({ success: true, message: 'Rôle utilisateur modifié avec succès' });
+      res.json({ success: true, message: 'Rôle modifié' });
     } catch (error) {
       console.log('Erreur:', error);
       res.status(500).json({ success: false, message: 'Erreur serveur' });

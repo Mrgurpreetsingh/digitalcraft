@@ -12,11 +12,11 @@ const StyledButton = styled.button`
   cursor: pointer;
 
   &:hover {
-    background-color: #059669; /*effet hover en arrere plan */
+    background-color: #059669; /* effet hover en arrière plan */
   }
 `;
 
-function Button({ children, onClick }) {
+function Button({ children, onClick = () => {} }) {
   return <StyledButton onClick={onClick}>{children}</StyledButton>;
 }
 

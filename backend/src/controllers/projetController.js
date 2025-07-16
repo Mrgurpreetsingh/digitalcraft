@@ -1,11 +1,7 @@
 // src/controllers/projetController.js
-const mysql = require('mysql2');
-
-// Configuration de la base de données (à adapter selon ta config)
-const db = require('../config/database');
+const { executeQuery } = require('../config/database');
 
 class ProjetController {
-  
   // Récupérer tous les projets
   static async getAll(req, res) {
     try {
@@ -23,28 +19,11 @@ class ProjetController {
         LEFT JOIN Utilisateur u2 ON p.employeId = u2.idUtilisateur
         ORDER BY p.dateCreation DESC
       `;
-      
-      db.query(query, (error, results) => {
-        if (error) {
-          console.log('Erreur SQL:', error);
-          return res.status(500).json({ 
-            success: false, 
-            message: 'Erreur serveur' 
-          });
-        }
-        
-        res.json({
-          success: true,
-          data: results
-        });
-      });
-      
+      const results = await executeQuery(query);
+      res.json({ success: true, data: results });
     } catch (error) {
-      console.log('Erreur:', error);
-      res.status(500).json({ 
-        success: false, 
-        message: 'Erreur serveur' 
-      });
+      console.error('Erreur SQL:', error);
+      res.status(500).json({ success: false, message: 'Erreur serveur' });
     }
   }
 
@@ -66,35 +45,14 @@ class ProjetController {
         LEFT JOIN Utilisateur u2 ON p.employeId = u2.idUtilisateur
         WHERE p.idProjet = ?
       `;
-      
-      db.query(query, [id], (error, results) => {
-        if (error) {
-          console.log('Erreur SQL:', error);
-          return res.status(500).json({ 
-            success: false, 
-            message: 'Erreur serveur' 
-          });
-        }
-        
-        if (results.length === 0) {
-          return res.status(404).json({ 
-            success: false, 
-            message: 'Projet non trouvé' 
-          });
-        }
-        
-        res.json({
-          success: true,
-          data: results[0]
-        });
-      });
-      
+      const results = await executeQuery(query, [id]);
+      if (results.length === 0) {
+        return res.status(404).json({ success: false, message: 'Projet non trouvé' });
+      }
+      res.json({ success: true, data: results[0] });
     } catch (error) {
-      console.log('Erreur:', error);
-      res.status(500).json({ 
-        success: false, 
-        message: 'Erreur serveur' 
-      });
+      console.error('Erreur SQL:', error);
+      res.status(500).json({ success: false, message: 'Erreur serveur' });
     }
   }
 
@@ -102,46 +60,19 @@ class ProjetController {
   static async create(req, res) {
     try {
       const { titre, description, images, statut, typeServiceId, clientId, employeId } = req.body;
-      
-      // Vérifications basiques
       if (!titre || !description || !typeServiceId) {
-        return res.status(400).json({ 
-          success: false, 
-          message: 'Titre, description et type de service sont obligatoires' 
-        });
+        return res.status(400).json({ success: false, message: 'Titre, description et type de service sont obligatoires' });
       }
-      
       const query = 'INSERT INTO Projet (titre, description, images, statut, typeServiceId, clientId, employeId) VALUES (?, ?, ?, ?, ?, ?, ?)';
-      const values = [titre, description, images, statut || 'En cours', typeServiceId, clientId, employeId];
-      
-      db.query(query, values, (error, results) => {
-        if (error) {
-          console.log('Erreur SQL:', error);
-          if (error.code === 'ER_DUP_ENTRY') {
-            return res.status(409).json({ 
-              success: false, 
-              message: 'Ce titre de projet existe déjà' 
-            });
-          }
-          return res.status(500).json({ 
-            success: false, 
-            message: 'Erreur serveur' 
-          });
-        }
-        
-        res.status(201).json({
-          success: true,
-          message: 'Projet créé avec succès',
-          data: { id: results.insertId }
-        });
-      });
-      
+      const values = [titre, description, images || null, statut || 'En cours', typeServiceId, clientId || null, employeId || null];
+      const result = await executeQuery(query, values);
+      res.status(201).json({ success: true, message: 'Projet créé', data: { id: result.insertId } });
     } catch (error) {
-      console.log('Erreur:', error);
-      res.status(500).json({ 
-        success: false, 
-        message: 'Erreur serveur' 
-      });
+      console.error('Erreur SQL:', error);
+      if (error.code === 'ER_DUP_ENTRY') {
+        return res.status(409).json({ success: false, message: 'Titre de projet déjà existant' });
+      }
+      res.status(500).json({ success: false, message: 'Erreur serveur' });
     }
   }
 
@@ -150,38 +81,16 @@ class ProjetController {
     try {
       const { id } = req.params;
       const { titre, description, images, statut, typeServiceId, clientId, employeId } = req.body;
-      
       const query = 'UPDATE Projet SET titre = ?, description = ?, images = ?, statut = ?, typeServiceId = ?, clientId = ?, employeId = ? WHERE idProjet = ?';
       const values = [titre, description, images, statut, typeServiceId, clientId, employeId, id];
-      
-      db.query(query, values, (error, results) => {
-        if (error) {
-          console.log('Erreur SQL:', error);
-          return res.status(500).json({ 
-            success: false, 
-            message: 'Erreur serveur' 
-          });
-        }
-        
-        if (results.affectedRows === 0) {
-          return res.status(404).json({ 
-            success: false, 
-            message: 'Projet non trouvé' 
-          });
-        }
-        
-        res.json({
-          success: true,
-          message: 'Projet modifié avec succès'
-        });
-      });
-      
+      const result = await executeQuery(query, values);
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ success: false, message: 'Projet non trouvé' });
+      }
+      res.json({ success: true, message: 'Projet modifié' });
     } catch (error) {
-      console.log('Erreur:', error);
-      res.status(500).json({ 
-        success: false, 
-        message: 'Erreur serveur' 
-      });
+      console.error('Erreur SQL:', error);
+      res.status(500).json({ success: false, message: 'Erreur serveur' });
     }
   }
 
@@ -189,37 +98,14 @@ class ProjetController {
   static async delete(req, res) {
     try {
       const { id } = req.params;
-      
-      const query = 'DELETE FROM Projet WHERE idProjet = ?';
-      
-      db.query(query, [id], (error, results) => {
-        if (error) {
-          console.log('Erreur SQL:', error);
-          return res.status(500).json({ 
-            success: false, 
-            message: 'Erreur serveur' 
-          });
-        }
-        
-        if (results.affectedRows === 0) {
-          return res.status(404).json({ 
-            success: false, 
-            message: 'Projet non trouvé' 
-          });
-        }
-        
-        res.json({
-          success: true,
-          message: 'Projet supprimé avec succès'
-        });
-      });
-      
+      const result = await executeQuery('DELETE FROM Projet WHERE idProjet = ?', [id]);
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ success: false, message: 'Projet non trouvé' });
+      }
+      res.json({ success: true, message: 'Projet supprimé' });
     } catch (error) {
-      console.log('Erreur:', error);
-      res.status(500).json({ 
-        success: false, 
-        message: 'Erreur serveur' 
-      });
+      console.error('Erreur SQL:', error);
+      res.status(500).json({ success: false, message: 'Erreur serveur' });
     }
   }
 
@@ -242,28 +128,11 @@ class ProjetController {
         WHERE p.statut = ?
         ORDER BY p.dateCreation DESC
       `;
-      
-      db.query(query, [statut], (error, results) => {
-        if (error) {
-          console.log('Erreur SQL:', error);
-          return res.status(500).json({ 
-            success: false, 
-            message: 'Erreur serveur' 
-          });
-        }
-        
-        res.json({
-          success: true,
-          data: results
-        });
-      });
-      
+      const results = await executeQuery(query, [statut]);
+      res.json({ success: true, data: results });
     } catch (error) {
-      console.log('Erreur:', error);
-      res.status(500).json({ 
-        success: false, 
-        message: 'Erreur serveur' 
-      });
+      console.error('Erreur SQL:', error);
+      res.status(500).json({ success: false, message: 'Erreur serveur' });
     }
   }
 }

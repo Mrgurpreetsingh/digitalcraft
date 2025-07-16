@@ -1,163 +1,159 @@
 import React, { useState, useEffect } from 'react';
-import { Users, FileText, Send, Plus, MessageSquare, Twitter, Edit, CheckCircle } from 'lucide-react';
-import '../styles/EmployeeDashboard.css';
+import { Settings, Users, FolderOpen, Plus, Edit, Trash2, User } from 'lucide-react';
+import ProjectsGrid from '../components/ProjectsGrid';
+import axios from 'axios';
+import '../styles/AdminDashboard.css';
 
-const EmployeeDashboard = () => {
+const AdminDashboard = () => {
+  const [activeTab, setActiveTab] = useState('users');
+  const [users, setUsers] = useState([]);
   const [projects, setProjects] = useState([]);
-  const [devis, setDevis] = useState([]);
-  const [activeTab, setActiveTab] = useState('projects');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showModal, setShowModal] = useState({ type: null, id: null, data: {} });
 
-  // Simuler des données (à remplacer par API)
   useEffect(() => {
-    setProjects([
-      { id: 1, title: 'Site E-commerce Mode', status: 'En cours', service: 'Création de sites web' },
-      { id: 2, title: 'App Mobile Restaurant', status: 'En cours', service: 'Applications mobiles' },
-    ]);
-    setDevis([
-      { id: 1, client: 'Jean Dupont', description: 'Devis pour site web' },
-    ]);
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem('token');
+        if (!token) throw new Error('Token manquant, veuillez vous connecter');
+        const [usersResponse, projectsResponse] = await Promise.all([
+          axios.get('http://localhost:5000/api/utilisateurs/employees-and-admins', { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get('http://localhost:5000/api/projets', { headers: { Authorization: `Bearer ${token}` } })
+        ]);
+        setUsers(usersResponse.data.data.map(user => ({
+          id: user.idUtilisateur,
+          name: `${user.nom} ${user.prenom}`,
+          email: user.email,
+          status: user.status || 'Actif',
+          avatar: `${user.nom[0]}${user.prenom[0]}`.toUpperCase()
+        })));
+        setProjects(projectsResponse.data.data.map(project => ({
+          id: project.idProjet,
+          name: project.titre,
+          description: project.description,
+          status: project.statut,
+          icon: '📄'
+        })));
+      } catch (err) {
+        setError('Erreur lors du chargement des données: ' + (err.response?.data?.message || err.message));
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
   }, []);
 
-  const updateProjectStatus = (id, newStatus) => {
-    setProjects(projects.map(p => p.id === id ? { ...p, status: newStatus } : p));
-  };
-
-  const respondToDevis = (id) => {
-    alert(`Réponse envoyée pour le devis ${id}`);
-  };
-
-  const publishSocialUpdate = () => {
-    const update = prompt('Entrez une mise à jour pour les réseaux sociaux :');
-    if (update) alert(`Mise à jour publiée : ${update}`);
-  };
-
-  const addProject = () => {
-    const title = prompt('Titre du nouveau projet :');
-    if (title) {
-      const newProject = {
-        id: projects.length + 1,
-        title,
-        status: 'En cours',
-        service: 'Nouveau service'
-      };
-      setProjects([...projects, newProject]);
+  const handleDelete = async (type, id) => {
+    if (window.confirm(`Êtes-vous sûr de vouloir supprimer ce ${type === 'users' ? 'utilisateur' : 'projet'}?`)) {
+      try {
+        const token = localStorage.getItem('token');
+        const url = `http://localhost:5000/api/${type === 'users' ? 'utilisateurs' : 'projets'}/${id}`;
+        await axios.delete(url, { headers: { Authorization: `Bearer ${token}` } });
+        if (type === 'users') setUsers(users.filter(u => u.id !== id));
+        else if (type === 'projects') setProjects(projects.filter(p => p.id !== id));
+      } catch (err) {
+        setError(`Erreur lors de la suppression du ${type}`);
+        console.error(err);
+      }
     }
   };
 
+  const handleEdit = (type, id, data = {}) => setShowModal({ type, id, data });
+  const handleAdd = (type) => setShowModal({ type, id: null, data: {} });
+
+  const closeModal = () => setShowModal({ type: null, id: null, data: {} });
+
+  const handleSave = async (type, data) => {
+    try {
+      const token = localStorage.getItem('token');
+      let url, method;
+      if (showModal.id) {
+        url = `http://localhost:5000/api/${type === 'users' ? 'utilisateurs' : 'projets'}/${showModal.id}`;
+        method = 'put';
+      } else {
+        url = `http://localhost:5000/api/${type === 'users' ? 'utilisateurs/register' : 'projets'}`;
+        method = 'post';
+      }
+      const response = await axios[method](url, { ...showModal.data, ...data }, { headers: { Authorization: `Bearer ${token}` } });
+      const item = response.data.data;
+      if (type === 'users') setUsers(showModal.id ? users.map(u => u.id === item.idUtilisateur ? { ...u, ...item } : u) : [...users, item]);
+      else if (type === 'projects') setProjects(showModal.id ? projects.map(p => p.id === item.idProjet ? { ...p, ...item } : p) : [...projects, item]);
+      closeModal();
+    } catch (err) {
+      setError(`Erreur lors de l'enregistrement du ${type}`);
+      console.error(err);
+    }
+  };
+
+  const getStatusClass = (status) => {
+    const statusMap = { 'Actif': 'actif', 'En cours': 'en-cours', 'Inactif': 'inactif', 'En attente': 'en-attente', 'Terminé': 'termine' };
+    return statusMap[status] || 'inactif';
+  };
+
+  if (loading) return <div>Chargement...</div>;
+  if (error) return <div>{error}</div>;
+
   return (
     <div className="dashboard-container">
-      {/* Header */}
-      <div className="dashboard-header">
+      <div className="header">
         <div className="header-content">
-          <div className="header-text">
-            <h1 className="dashboard-title">Espace Employé</h1>
-            <p className="dashboard-subtitle">Gérez vos projets, devis et publications</p>
+          <div className="header-title">
+            <h1 className="title">Administration</h1>
+            <p className="subtitle">Gérez les utilisateurs et les projets</p>
           </div>
+          <Settings size={24} color="#007bff" />
         </div>
       </div>
-
-      <div className="dashboard-main">
-        {/* Action Buttons */}
-        <div className="action-buttons-section">
+      <div className="main-content">
+        <div className="action-card">
           <div className="action-buttons">
-            <button
-              onClick={addProject}
-              className="btn-primary"
-            >
-              <Plus size={20} />
-              Ajouter un Projet
-            </button>
-            <button
-              onClick={() => respondToDevis(1)}
-              className="btn-primary"
-            >
-              <MessageSquare size={20} />
-              Répondre à un Devis
-            </button>
+            <button className="action-button" onClick={() => handleAdd('users')}><User size={16} /> Ajouter Utilisateur</button>
+            <button className="action-button" onClick={() => handleAdd('projects')}><Plus size={16} /> Ajouter Projet</button>
           </div>
         </div>
-
-        {/* Tabs */}
-        <div className="tabs-container">
-          <div className="tabs-header">
-            <nav className="tabs-nav" aria-label="Tabs">
-              <button
-                onClick={() => setActiveTab('projects')}
-                className={`tab-button ${activeTab === 'projects' ? 'tab-active' : 'tab-inactive'}`}
-              >
-                <div className="tab-content">
-                  <FileText size={20} />
-                  Projets
-                </div>
+        <div className="content-card">
+          <div className="tab-container">
+            <nav className="tab-nav">
+              <button className={`tab-button ${activeTab === 'users' ? 'active' : ''}`} onClick={() => setActiveTab('users')}>
+                <Users size={16} /> Utilisateurs
               </button>
-              <button
-                onClick={() => setActiveTab('devis')}
-                className={`tab-button ${activeTab === 'devis' ? 'tab-active' : 'tab-inactive'}`}
-              >
-                <div className="tab-content">
-                  <FileText size={20} />
-                  Demandes de Devis
-                </div>
-              </button>
-              <button
-                onClick={() => setActiveTab('social')}
-                className={`tab-button ${activeTab === 'social' ? 'tab-active' : 'tab-inactive'}`}
-              >
-                <div className="tab-content">
-                  <Twitter size={20} />
-                  Réseaux Sociaux
-                </div>
+              <button className={`tab-button ${activeTab === 'projects' ? 'active' : ''}`} onClick={() => setActiveTab('projects')}>
+                <FolderOpen size={16} /> Projets
               </button>
             </nav>
           </div>
-
-          <div className="tab-content-container">
-            {activeTab === 'projects' && (
+          <div className="tab-content">
+            {activeTab === 'users' && (
               <div>
-                <h2 className="section-title">Gestion des Projets</h2>
-                <div className="table-container">
-                  <table className="data-table">
-                    <thead>
-                      <tr className="table-header">
-                        <th className="table-th">Titre</th>
-                        <th className="table-th">Statut</th>
-                        <th className="table-th">Actions</th>
+                <h2 className="section-title">Liste des Utilisateurs</h2>
+                <div style={{ overflowX: 'auto' }}>
+                  <table className="table">
+                    <thead className="table-header">
+                      <tr className="table-row">
+                        <th className="table-header-cell">Nom</th>
+                        <th className="table-header-cell">Email</th>
+                        <th className="table-header-cell">Statut</th>
+                        <th className="table-header-cell">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="table-body">
-                      {projects.map((project) => (
-                        <tr key={project.id} className="table-row">
-                          <td className="table-td">
-                            <div className="project-title">
-                              <div className="project-icon">
-                                <span className="project-letter">
-                                  {project.title.charAt(0)}
-                                </span>
-                              </div>
-                              <span className="project-name">{project.title}</span>
+                    <tbody>
+                      {users.map((user) => (
+                        <tr key={user.id} className="table-row">
+                          <td className="table-cell">
+                            <div className="user-info">
+                              <div className="avatar"><span className="avatar-text">{user.avatar}</span></div>
+                              <div className="user-name">{user.name}</div>
                             </div>
                           </td>
-                          <td className="table-td">
-                            <select
-                              onChange={(e) => updateProjectStatus(project.id, e.target.value)}
-                              value={project.status}
-                              className="status-select"
-                            >
-                              <option value="En cours">En cours</option>
-                              <option value="Terminé">Terminé</option>
-                              <option value="Annulé">Annulé</option>
-                            </select>
-                          </td>
-                          <td className="table-td">
+                          <td className="table-cell">{user.email}</td>
+                          <td className="table-cell"><span className={`status-badge ${getStatusClass(user.status)}`}>{user.status}</span></td>
+                          <td className="table-cell">
                             <div className="action-buttons-table">
-                              <button className="btn-secondary">
-                                <Edit size={14} />
-                                Modifier
-                              </button>
-                              <button className="btn-success">
-                                <CheckCircle size={14} />
-                                Mettre à jour
-                              </button>
+                              <button className="icon-button edit" onClick={() => handleEdit('users', user.id, { name: user.name, email: user.email, status: user.status })} title="Modifier"><Edit size={16} /></button>
+                              <button className="icon-button delete" onClick={() => handleDelete('users', user.id)} title="Supprimer"><Trash2 size={16} /></button>
                             </div>
                           </td>
                         </tr>
@@ -167,64 +163,45 @@ const EmployeeDashboard = () => {
                 </div>
               </div>
             )}
-
-            {activeTab === 'devis' && (
-              <div>
-                <h2 className="section-title">Gestion des Devis</h2>
-                <div className="table-container">
-                  <table className="data-table">
-                    <thead>
-                      <tr className="table-header">
-                        <th className="table-th">ID</th>
-                        <th className="table-th">Client</th>
-                        <th className="table-th">Description</th>
-                        <th className="table-th">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="table-body">
-                      {devis.map((devisItem) => (
-                        <tr key={devisItem.id} className="table-row">
-                          <td className="table-td table-id">{devisItem.id}</td>
-                          <td className="table-td">{devisItem.client}</td>
-                          <td className="table-td">{devisItem.description}</td>
-                          <td className="table-td">
-                            <button
-                              onClick={() => respondToDevis(devisItem.id)}
-                              className="btn-success"
-                            >
-                              <MessageSquare size={14} />
-                              Répondre
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'social' && (
-              <div>
-                <h2 className="section-title">Réseaux Sociaux</h2>
-                <div className="social-section">
-                  <Twitter size={48} className="social-icon" />
-                  <p className="social-text">Publiez une mise à jour sur les réseaux sociaux</p>
-                  <button
-                    onClick={publishSocialUpdate}
-                    className="btn-primary btn-large"
-                  >
-                    <Send size={20} />
-                    Publier une Mise à Jour
-                  </button>
-                </div>
-              </div>
+            {activeTab === 'projects' && (
+              <ProjectsGrid projects={projects} onEdit={id => handleEdit('projects', id, projects.find(p => p.id === id))} onDelete={id => handleDelete('projects', id)} />
             )}
           </div>
         </div>
       </div>
+      {showModal.type && (
+        <div className="modal">
+          <div className="modal-content">
+            <h3>{showModal.id ? 'Modifier' : 'Ajouter'} {showModal.type}</h3>
+            <input
+              value={showModal.data.name || ''}
+              onChange={(e) => setShowModal({ ...showModal, data: { ...showModal.data, name: e.target.value } })}
+              placeholder={showModal.type === 'users' ? 'Nom' : 'Titre'}
+              className="modal-input"
+            />
+            {showModal.type === 'projects' && (
+              <input
+                value={showModal.data.description || ''}
+                onChange={(e) => setShowModal({ ...showModal, data: { ...showModal.data, description: e.target.value } })}
+                placeholder="Description"
+                className="modal-input"
+              />
+            )}
+            {showModal.type === 'users' && (
+              <input
+                value={showModal.data.email || ''}
+                onChange={(e) => setShowModal({ ...showModal, data: { ...showModal.data, email: e.target.value } })}
+                placeholder="Email"
+                className="modal-input"
+              />
+            )}
+            <button onClick={closeModal} className="modal-button cancel">Annuler</button>
+            <button onClick={() => handleSave(showModal.type, showModal.data)} className="modal-button save">Sauvegarder</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default EmployeeDashboard;
+export default AdminDashboard;

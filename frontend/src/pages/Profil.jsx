@@ -104,7 +104,6 @@ const Profil = () => {
 
   return (
     <>
-      <Navbar />
       <ProfilContainer>
         <h1 style={{ fontFamily: 'Poppins', fontSize: '32px', color: '#1A1A1A', fontWeight: 'bold' }}>Mon Profil</h1>
         <FormContainer>
@@ -196,7 +195,6 @@ const Profil = () => {
           </form>
         </FormContainer>
       </ProfilContainer>
-      <Footer />
     </>
   );
 };
