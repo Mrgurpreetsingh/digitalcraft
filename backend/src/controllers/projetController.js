@@ -5,21 +5,21 @@ class ProjetController {
   // Récupérer tous les projets
   static async getAll(req, res) {
     try {
-      const query = `
-        SELECT 
-          p.*, 
-          s.titre as serviceTitre, 
-          u1.nom as clientNom, 
-          u1.prenom as clientPrenom,
-          u2.nom as employeNom, 
-          u2.prenom as employePrenom
+      let query = `
+        SELECT p.*, s.titre as serviceTitre, u1.nom as clientNom, u1.prenom as clientPrenom,
+          u2.nom as employeNom, u2.prenom as employePrenom
         FROM Projet p
         LEFT JOIN Service s ON p.typeServiceId = s.idService
         LEFT JOIN Utilisateur u1 ON p.clientId = u1.idUtilisateur
         LEFT JOIN Utilisateur u2 ON p.employeId = u2.idUtilisateur
-        ORDER BY p.dateCreation DESC
       `;
-      const results = await executeQuery(query);
+      const params = [];
+      if (req.query.statut) {
+        query += ' WHERE p.statut = ?';
+        params.push(req.query.statut);
+      }
+      query += ' ORDER BY p.dateCreation DESC';
+      const results = await executeQuery(query, params);
       res.json({ success: true, data: results });
     } catch (error) {
       console.error('Erreur SQL:', error);
