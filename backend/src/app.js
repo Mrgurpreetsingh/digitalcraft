@@ -42,18 +42,41 @@ if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('combined'));
 }
 
-// Rate limiting
+// Rate limiting - Configuration différente selon l'environnement
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limite chaque IP à 100 requêtes par windowMs
+  windowMs: process.env.NODE_ENV === 'production' ? 15 * 60 * 1000 : 60 * 1000, // 15 min en prod, 1 min en dev
+  max: process.env.NODE_ENV === 'production' ? 100 : 1000, // 100 en prod, 1000 en dev
   message: {
     success: false,
     message: 'Trop de requêtes, veuillez réessayer plus tard.'
   },
   standardHeaders: true,
   legacyHeaders: false,
+  // Ajouter plus d'infos dans les logs
+  handler: (req, res, next, options) => {
+    console.log(`Rate limit atteinte pour IP: ${req.ip}, URL: ${req.originalUrl}`);
+    res.status(options.statusCode).json(options.message);
+  }
 });
 
+// Rate limiting spécifique pour login (plus restrictif)
+const loginLimiter = rateLimit({
+  windowMs: process.env.NODE_ENV === 'production' ? 15 * 60 * 1000 : 2 * 60 * 1000, // 15 min en prod, 2 min en dev
+  max: process.env.NODE_ENV === 'production' ? 5 : 20, // 5 en prod, 20 en dev
+  message: {
+    success: false,
+    message: 'Trop de tentatives de connexion. Veuillez réessayer dans quelques minutes.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true, // Ne compte que les échecs
+  handler: (req, res, next, options) => {
+    console.log(`Login rate limit atteinte pour IP: ${req.ip}`);
+    res.status(options.statusCode).json(options.message);
+  }
+});
+
+// Appliquer le rate limiting général
 app.use('/api/', limiter);
 
 // Middleware pour parser le JSON
@@ -70,6 +93,9 @@ app.get('/api/health', (req, res) => {
     version: '1.0.0'
   });
 });
+
+// Rate limiting spécifique pour les routes de login
+app.use('/api/utilisateurs/login', loginLimiter);
 
 // Routes API
 app.use('/api', routes);

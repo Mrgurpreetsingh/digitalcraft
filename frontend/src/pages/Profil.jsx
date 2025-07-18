@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { ChampFormulaire, ChampSelection, ZoneTexte, CaseCoche } from '../components/ComposantsFormulaire';
 import { User, Mail, Lock, Image as ImageIcon } from 'lucide-react';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 
 const ProfilContainer = styled.div`
   min-height: 100vh;

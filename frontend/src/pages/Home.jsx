@@ -1,5 +1,6 @@
 import React from 'react';
 import '../styles/Home.css';
+import Avis from '../components/Avis';
 
 function Home() {
   return (
@@ -51,26 +52,7 @@ function Home() {
           </div>
         </div>
       </section>
-      <section className="testimonials">
-        <h1>Ce que disent nos clients</h1>
-        <p>La satisfaction client au cœur de notre mission</p>
-        <div className="testimonials-grid">
-          <div className="testimonial-card">
-            <img src="/img/marie-dubois.jpg" alt="Marie Dubois" />
-            <h4>Marie Dubois</h4>
-            <p>dev, TechStart</p>
-            <p>★★★★★</p>
-            <p>"DigitalCraft a transformé notre vision en une plateforme web exceptionnelle. Leur expertise technique et leur approche collaborative ont dépassé nos attentes. Un partenaire de confiance !"</p>
-          </div>
-          <div className="testimonial-card">
-            <img src="/img/thomas-martin.jpg" alt="Thomas Martin" />
-            <h4>Thomas Martin</h4>
-            <p>Marketing, InnovateCorp</p>
-            <p>★★★★★</p>
-            <p>"L’équipe DigitalCraft a développé notre application mobile avec un professionnalisme remarquable. Le résultat final est à la hauteur de nos ambitions. Je recommande vivement !"</p>
-          </div>
-        </div>
-      </section>
+      <Avis />
     </main>
   );
 }
