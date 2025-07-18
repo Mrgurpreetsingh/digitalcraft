@@ -11,8 +11,11 @@ import Profil from './pages/Profil.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';
 import EmployeeDashboard from './pages/EmployeeDashboard.jsx';
 import Portfolio from './pages/Portfolio.jsx';
+import PolitiqueConfidentialite from './pages/PolitiqueConfidentialite.jsx';
+import MentionsLegales from './pages/MentionsLegales.jsx';
 import Footer from './components/Footer';
-import ProtectedRoute from './components/ProtectedRoute'; // Ajoute ce fichier
+import CookieBanner from './components/CookieBanner';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
@@ -28,6 +31,8 @@ function App() {
           <Route path="/devis" element={<DevisPage />} />
           <Route path="/profil" element={<Profil />} />
           <Route path="/portfolio" element={<Portfolio />} />
+          <Route path="/politique-confidentialite" element={<PolitiqueConfidentialite />} />
+          <Route path="/mentions-legales" element={<MentionsLegales />} />
           <Route
             path="/admin"
             element={
@@ -48,6 +53,7 @@ function App() {
           <Route path="*" element={<Navigate to="/connexion" />} />
         </Routes>
         <Footer />
+        <CookieBanner />
       </div>
     </Router>
   );

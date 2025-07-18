@@ -1,7 +1,8 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import '../styles/Footer.css';
 
-function Footer() {
+const Footer = () => {
   return (
     <footer>
       <div className="footer-content">
@@ -26,12 +27,19 @@ function Footer() {
             <li>Paris, France</li>
           </ul>
         </div>
+        <div className="footer-section">
+          <h3>Légal</h3>
+          <ul>
+            <li><Link to="/politique-confidentialite">Politique de confidentialité</Link></li>
+            <li><Link to="/mentions-legales">Mentions légales</Link></li>
+          </ul>
+        </div>
       </div>
       <div className="footer-bottom">
         <p>© 2025 DigitalCraft. Tous droits réservés.</p>
       </div>
     </footer>
   );
-}
+};
 
 export default Footer;

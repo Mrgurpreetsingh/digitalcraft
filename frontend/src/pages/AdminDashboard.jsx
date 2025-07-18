@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Settings, Users, FolderOpen, Plus, Edit, Trash2, User, FileText, MessageSquare, BarChart3 } from 'lucide-react';
 import axios from 'axios';
 import '../styles/AdminDashboard.css';
@@ -26,11 +26,8 @@ const AdminDashboard = () => {
     }
   });
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  // Utiliser useCallback pour éviter les dépendances manquantes
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -98,7 +95,11 @@ const AdminDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []); // Suppression de la dépendance api pour éviter la boucle infinie
+
+  useEffect(() => {
+    fetchData();
+  }, []); // Appel unique au montage du composant
 
   // Actions CRUD pour les utilisateurs
   const handleDeleteUser = async (userId) => {

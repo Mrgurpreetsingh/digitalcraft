@@ -6,6 +6,7 @@ import axios from 'axios';
 const Portfolio = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedService, setSelectedService] = useState('Tous');
 
   useEffect(() => {
     axios.get('http://localhost:5000/api/projets?statut=Publié')
@@ -15,6 +16,17 @@ const Portfolio = () => {
       })
       .catch(() => setLoading(false));
   }, []);
+
+  // Récupère la liste unique des services présents dans les projets
+  const serviceList = [
+    'Tous',
+    ...Array.from(new Set(projects.map(p => p.serviceTitre || p.category)))
+  ];
+
+  // Filtrage des projets selon le service sélectionné
+  const filteredProjects = selectedService === 'Tous'
+    ? projects
+    : projects.filter(p => (p.serviceTitre || p.category) === selectedService);
 
   return (
     <div className="portfolio-container">
@@ -44,7 +56,22 @@ const Portfolio = () => {
           <h2>Nos Projets Réalisés</h2>
           <p>Chaque projet raconte une histoire de réussite digitale</p>
         </div>
-        {loading ? <p>Chargement...</p> : <ProjectGrid projects={projects} />}
+
+        {/* Filtre par type de service */}
+        <div className="portfolio-filter">
+          <label htmlFor="service-filter">Filtrer par service :</label>
+          <select
+            id="service-filter"
+            value={selectedService}
+            onChange={e => setSelectedService(e.target.value)}
+          >
+            {serviceList.map(service => (
+              <option key={service} value={service}>{service}</option>
+            ))}
+          </select>
+        </div>
+
+        {loading ? <p>Chargement...</p> : <ProjectGrid projects={filteredProjects} />}
       </section>
     </div>
   );

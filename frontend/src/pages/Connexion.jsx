@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, Mail, Lock, LogIn, Eye, EyeOff } from 'lucide-react';
 import ReCAPTCHA from 'react-google-recaptcha';
 import axios from 'axios';
+import { useAuth } from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 import '../styles/Connexion.css';
 
 const ConnexionPage = () => {
@@ -12,6 +14,18 @@ const ConnexionPage = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [captchaToken, setCaptchaToken] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const { login, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  // Rediriger si déjà connecté
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/');
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -19,6 +33,8 @@ const ConnexionPage = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
     }));
+    // Effacer l'erreur quand l'utilisateur tape
+    if (error) setError('');
   };
 
   const handleCaptchaChange = (token) => {
@@ -27,30 +43,49 @@ const ConnexionPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
+
     if (!captchaToken) {
-      alert('Veuillez vérifier le reCAPTCHA.');
+      setError('Veuillez vérifier le reCAPTCHA.');
+      setLoading(false);
       return;
     }
+
     const payload = {
       email: formData.email,
       motDePasse: formData.motDePasse,
       token: captchaToken,
     };
+
     try {
-      const res = await axios.post('http://localhost:5000/api/utilisateurs/login', payload); // Ajuste l'URL
+      const res = await axios.post('http://localhost:5000/api/utilisateurs/login', payload);
       const data = res.data;
+
       if (data.success) {
-        localStorage.setItem('token', data.data.token);
-        localStorage.setItem('role', data.data.user.role); // Utilise data.data.user.role
-        if (data.data.user.role === 'Administrateur') window.location.href = '/admin';
-        else if (data.data.user.role === 'Employé') window.location.href = '/employe';
-        alert('Connexion réussie !');
+        // Utiliser le contexte pour la connexion
+        login(data.data.user, data.data.token);
+        
+        // Redirection selon le rôle
+        if (data.data.user.role === 'Administrateur') {
+          navigate('/admin');
+        } else if (data.data.user.role === 'Employé') {
+          navigate('/employe');
+        } else {
+          navigate('/');
+        }
       } else {
-        alert(data.message || 'Erreur lors de la connexion');
+        setError(data.message || 'Erreur lors de la connexion');
       }
     } catch (error) {
       console.error('Erreur:', error);
-      alert('Erreur réseau ou serveur');
+      if (error.response && error.response.data && error.response.data.message) {
+        setError(error.response.data.message);
+      } else {
+        setError('Erreur réseau ou serveur');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -74,6 +109,13 @@ const ConnexionPage = () => {
             <h2 className="connexion-form-title">Connectez-vous</h2>
             <p className="connexion-form-subtitle">Entrez vos identifiants pour accéder à votre compte</p>
           </div>
+
+          {error && (
+            <div className="connexion-error-message">
+              {error}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit}>
             <div className="connexion-field-container">
               <label className="connexion-label">
@@ -89,9 +131,11 @@ const ConnexionPage = () => {
                   placeholder="votre@email.com"
                   className="connexion-input"
                   required
+                  disabled={loading}
                 />
               </div>
             </div>
+
             <div className="connexion-field-container">
               <label className="connexion-label">
                 Mot de passe <span className="connexion-required">*</span>
@@ -106,16 +150,20 @@ const ConnexionPage = () => {
                   placeholder="••••••••"
                   className="connexion-input"
                   required
+                  disabled={loading}
+                  autoComplete="current-password"
                 />
                 <button
                   type="button"
                   className="connexion-toggle-password"
                   onClick={() => setShowPassword(!showPassword)}
+                  disabled={loading}
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
             </div>
+
             <div className="connexion-checkbox-container">
               <div className="connexion-checkbox-group">
                 <input
@@ -124,6 +172,7 @@ const ConnexionPage = () => {
                   checked={formData.seSouvenirDeMoi}
                   onChange={handleInputChange}
                   className="connexion-checkbox"
+                  disabled={loading}
                 />
                 <label className="connexion-checkbox-label">Se souvenir de moi</label>
               </div>
@@ -131,6 +180,7 @@ const ConnexionPage = () => {
                 Mot de passe oublié ?
               </a>
             </div>
+
             <div className="connexion-field-container">
               <div className="connexion-recaptcha-container">
                 <ReCAPTCHA
@@ -140,9 +190,23 @@ const ConnexionPage = () => {
                 />
               </div>
             </div>
-            <button type="submit" className="connexion-button">
-              <LogIn size={20} />
-              <span>Se connecter</span>
+
+            <button 
+              type="submit" 
+              className="connexion-button"
+              disabled={loading || !captchaToken}
+            >
+              {loading ? (
+                <>
+                  <div className="connexion-loading-spinner"></div>
+                  <span>Connexion en cours...</span>
+                </>
+              ) : (
+                <>
+                  <LogIn size={20} />
+                  <span>Se connecter</span>
+                </>
+              )}
             </button>
           </form>
         </div>

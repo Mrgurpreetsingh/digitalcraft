@@ -1,0 +1,2 @@
+# Ignore Firebase config file (clé API)
+src/services/firebase.js 
