@@ -16,8 +16,8 @@ yarn-error.log*
 dist/
 build/
 
-# Firebase config file (clé API)
-src/services/firebase.js
+# Firebase config file (clé API) - RETIRÉ car nécessaire pour le build
+# src/services/firebase.js
 firebase-config.js
 
 # Logs
