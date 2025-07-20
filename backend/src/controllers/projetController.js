@@ -135,6 +135,25 @@ class ProjetController {
       res.status(500).json({ success: false, message: 'Erreur serveur' });
     }
   }
+
+  // Récupérer les projets assignés à l'employé connecté
+  static async getAssignedToEmployee(req, res) {
+    try {
+      const employeId = req.user.idUtilisateur || req.user.id;
+      const query = `
+        SELECT p.*, s.titre as serviceTitre, u1.nom as clientNom, u1.prenom as clientPrenom
+        FROM Projet p
+        LEFT JOIN Service s ON p.typeServiceId = s.idService
+        LEFT JOIN Utilisateur u1 ON p.clientId = u1.idUtilisateur
+        WHERE p.employeId = ?
+        ORDER BY p.dateCreation DESC
+      `;
+      const results = await executeQuery(query, [employeId]);
+      res.json({ success: true, data: results });
+    } catch (error) {
+      res.status(500).json({ success: false, message: 'Erreur serveur' });
+    }
+  }
 }
 
 module.exports = ProjetController;

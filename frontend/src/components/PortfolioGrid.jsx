@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const PortfolioGrid = ({ projects }) => {
+const PortfolioGrid = ({ projects, onProjectClick }) => {
   const [hoveredCard, setHoveredCard] = useState(null);
 
   const getCategoryColor = (category) => {
@@ -40,7 +40,7 @@ const PortfolioGrid = ({ projects }) => {
             <p className="project-description">{project.description}</p>
             {/* Ajoute les tags ou témoignages si dispo */}
             <div className="project-actions">
-              <button className="project-btn-primary">
+              <button className="project-btn-primary" onClick={() => onProjectClick && onProjectClick(project)}>
                 En savoir plus →
               </button>
             </div>
