@@ -52,6 +52,72 @@ class UtilisateurController {
     }
   }
 
+  // Créer un nouvel utilisateur (admin seulement, sans reCAPTCHA)
+  static async createAdmin(req, res) {
+    try {
+      console.log('=== CRÉATION UTILISATEUR ADMIN ===');
+      console.log('Admin:', req.user.email);
+      console.log('Données reçues:', { 
+        email: req.body.email, 
+        nom: req.body.nom, 
+        prenom: req.body.prenom, 
+        role: req.body.role,
+        motDePasse: '[MASQUÉ]'
+      });
+
+      const { email, nom, prenom, motDePasse, role } = req.body;
+
+      // Vérifier si l'email existe déjà
+      console.log('Vérification email existant...');
+      const existingUser = await executeQuery('SELECT idUtilisateur FROM Utilisateur WHERE email = ?', [email]);
+      if (existingUser.length > 0) {
+        console.log('❌ Email déjà existant:', email);
+        return res.status(409).json({ success: false, message: 'Cet email existe déjà' });
+      }
+
+      // Hasher le mot de passe
+      console.log('Hashage du mot de passe...');
+      const hashedPassword = await bcrypt.hash(motDePasse, 12); // Augmenté à 12 rounds
+
+      // Insérer l'utilisateur
+      console.log('Insertion en base de données...');
+      const result = await executeQuery(
+        'INSERT INTO Utilisateur (email, nom, prenom, motDePasse, role) VALUES (?, ?, ?, ?, ?)',
+        [email, nom, prenom, hashedPassword, role]
+      );
+      
+      console.log('✅ Utilisateur inséré, ID:', result.insertId);
+      
+      // Récupérer l'utilisateur créé pour le retourner
+      const newUser = await executeQuery(
+        'SELECT idUtilisateur, email, nom, prenom, role, dateCreation FROM Utilisateur WHERE idUtilisateur = ?',
+        [result.insertId]
+      );
+      
+      console.log('✅ Utilisateur créé avec succès:', newUser[0].email);
+      console.log('=== FIN CRÉATION UTILISATEUR ADMIN ===');
+      
+      res.status(201).json({ 
+        success: true, 
+        message: 'Utilisateur créé avec succès', 
+        data: newUser[0]
+      });
+    } catch (error) {
+      console.error('❌ Erreur lors de la création admin:', error);
+      console.error('Stack trace:', error.stack);
+      
+      if (error.code === 'ER_DUP_ENTRY') {
+        return res.status(409).json({ success: false, message: 'Cet email existe déjà' });
+      }
+      
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erreur serveur lors de la création de l\'utilisateur',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
+
   // Créer un nouvel utilisateur avec reCAPTCHA et validation
   static async register(req, res) {
     try {
@@ -203,22 +269,87 @@ class UtilisateurController {
   // Modifier un utilisateur (admin)
   static async update(req, res) {
     try {
+      console.log('=== MODIFICATION UTILISATEUR ===');
+      console.log('Admin:', req.user.email);
+      console.log('ID utilisateur à modifier:', req.params.id);
+      console.log('Données reçues:', { 
+        email: req.body.email, 
+        nom: req.body.nom, 
+        prenom: req.body.prenom, 
+        role: req.body.role,
+        motDePasse: req.body.motDePasse ? '[MASQUÉ]' : 'Non fourni'
+      });
+
       const { id } = req.params;
-      const { email, nom, prenom, role } = req.body;
-      if (req.user.role !== 'Administrateur') {
-        return res.status(403).json({ success: false, message: 'Accès refusé. Seuls les admins peuvent modifier' });
-      }
-      const result = await executeQuery('UPDATE Utilisateur SET email = ?, nom = ?, prenom = ?, role = ? WHERE idUtilisateur = ?', [email, nom, prenom, role, id]);
-      if (result.affectedRows === 0) {
+      const { email, nom, prenom, role, motDePasse } = req.body;
+
+      // Vérifier si l'utilisateur existe
+      const existingUser = await executeQuery('SELECT idUtilisateur FROM Utilisateur WHERE idUtilisateur = ?', [id]);
+      if (existingUser.length === 0) {
+        console.log('❌ Utilisateur non trouvé');
         return res.status(404).json({ success: false, message: 'Utilisateur non trouvé' });
       }
-      res.json({ success: true, message: 'Utilisateur modifié' });
+
+      // Vérifier si l'email existe déjà (sauf pour l'utilisateur actuel)
+      if (email) {
+        const emailExists = await executeQuery('SELECT idUtilisateur FROM Utilisateur WHERE email = ? AND idUtilisateur != ?', [email, id]);
+        if (emailExists.length > 0) {
+          console.log('❌ Email déjà existant:', email);
+          return res.status(409).json({ success: false, message: 'Cet email existe déjà' });
+        }
+      }
+
+      // Construire la requête de mise à jour
+      let updateQuery = 'UPDATE Utilisateur SET email = ?, nom = ?, prenom = ?, role = ?';
+      let updateParams = [email, nom, prenom, role];
+
+      // Ajouter le mot de passe si fourni
+      if (motDePasse) {
+        console.log('Hashage du nouveau mot de passe...');
+        const hashedPassword = await bcrypt.hash(motDePasse, 12);
+        updateQuery += ', motDePasse = ?';
+        updateParams.push(hashedPassword);
+      }
+
+      updateQuery += ' WHERE idUtilisateur = ?';
+      updateParams.push(id);
+
+      // Exécuter la mise à jour
+      console.log('Mise à jour en base de données...');
+      const result = await executeQuery(updateQuery, updateParams);
+      
+      if (result.affectedRows === 0) {
+        console.log('❌ Aucune modification effectuée');
+        return res.status(404).json({ success: false, message: 'Utilisateur non trouvé' });
+      }
+
+      // Récupérer l'utilisateur mis à jour
+      const updatedUser = await executeQuery(
+        'SELECT idUtilisateur, email, nom, prenom, role, dateCreation FROM Utilisateur WHERE idUtilisateur = ?',
+        [id]
+      );
+      
+      console.log('✅ Utilisateur modifié avec succès:', updatedUser[0].email);
+      console.log('=== FIN MODIFICATION UTILISATEUR ===');
+      
+      res.json({ 
+        success: true, 
+        message: 'Utilisateur modifié avec succès', 
+        data: updatedUser[0]
+      });
     } catch (error) {
-      console.log('Erreur:', error);
+      console.error('❌ Erreur lors de la modification:', error);
+      console.error('Stack trace:', error.stack);
+      
       if (error.code === 'ER_DUP_ENTRY') {
         return res.status(409).json({ success: false, message: 'Cet email existe déjà' });
       }
-      res.status(500).json({ success: false, message: 'Erreur serveur' });
+      
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erreur serveur lors de la modification de l\'utilisateur',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
     }
   }
 

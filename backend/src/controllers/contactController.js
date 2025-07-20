@@ -77,6 +77,90 @@ class ContactController {
       });
     }
   }
+
+  // Mettre à jour un contact (marquer comme traité, ajouter des notes)
+  static async update(req, res) {
+    try {
+      const { id } = req.params;
+      const { statut, notes, employeId } = req.body;
+      
+      // Vérifier que le contact existe
+      const existingContact = await ContactModel.getById(id);
+      if (!existingContact) {
+        return res.status(404).json({
+          success: false,
+          message: 'Contact non trouvé'
+        });
+      }
+
+      // Mettre à jour le contact
+      const updateData = {};
+      if (statut) updateData.statut = statut;
+      if (notes !== undefined) updateData.notes = notes;
+      if (employeId) updateData.employeId = employeId;
+
+      const result = await ContactModel.update(id, updateData);
+      
+      res.json({
+        success: true,
+        message: 'Contact mis à jour avec succès',
+        data: { id }
+      });
+    } catch (error) {
+      console.log('Erreur:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erreur serveur'
+      });
+    }
+  }
+
+  // Supprimer un contact
+  static async delete(req, res) {
+    try {
+      const { id } = req.params;
+      
+      // Vérifier que le contact existe
+      const existingContact = await ContactModel.getById(id);
+      if (!existingContact) {
+        return res.status(404).json({
+          success: false,
+          message: 'Contact non trouvé'
+        });
+      }
+
+      // Supprimer le contact
+      await ContactModel.delete(id);
+      
+      res.json({
+        success: true,
+        message: 'Contact supprimé avec succès'
+      });
+    } catch (error) {
+      console.log('Erreur:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erreur serveur'
+      });
+    }
+  }
+
+  // Récupérer les statistiques des contacts
+  static async getStats(req, res) {
+    try {
+      const stats = await ContactModel.getStats();
+      res.json({
+        success: true,
+        data: stats
+      });
+    } catch (error) {
+      console.log('Erreur:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erreur serveur'
+      });
+    }
+  }
 }
 
 module.exports = ContactController;

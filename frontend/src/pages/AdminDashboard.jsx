@@ -1,22 +1,37 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Settings, Users, FolderOpen, Plus, Edit, Trash2, User, FileText, MessageSquare, BarChart3 } from 'lucide-react';
+import { Settings, Users, FolderOpen, Plus, Edit, Trash2, User, FileText, MessageSquare, BarChart3, Star, MessageCircle } from 'lucide-react';
 import axios from 'axios';
+import { useAuth } from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
+import AddUserModal from '../components/AddUserModal';
+import EditUserModal from '../components/EditUserModal';
+import ServiceModal from '../components/ServiceModal';
 import '../styles/AdminDashboard.css';
 
 const AdminDashboard = () => {
+  const { isAuthenticated, user } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('users');
   const [users, setUsers] = useState([]);
   const [projects, setProjects] = useState([]);
   const [services, setServices] = useState([]);
   const [quotes, setQuotes] = useState([]);
+  const [reviews, setReviews] = useState([]); // Nouveau : avis Firebase
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalProjects: 0,
     totalServices: 0,
-    totalQuotes: 0
+    totalQuotes: 0,
+    totalReviews: 0 // Nouveau
   });
+  const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const [showEditUserModal, setShowEditUserModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showServiceModal, setShowServiceModal] = useState(false);
+  const [selectedService, setSelectedService] = useState(null);
+  const [isEditService, setIsEditService] = useState(false);
 
   // Configuration axios avec token
   const api = axios.create({
@@ -33,11 +48,12 @@ const AdminDashboard = () => {
       setError(null);
 
       // Récupérer toutes les données en parallèle
-      const [usersRes, projectsRes, servicesRes, quotesRes] = await Promise.all([
+      const [usersRes, projectsRes, servicesRes, quotesRes, reviewsRes] = await Promise.all([
         api.get('/utilisateurs/employees-and-admins'),
         api.get('/projets'),
         api.get('/services'),
-        api.get('/devis')
+        api.get('/devis'),
+        api.get('/avis/debug/firebase') // Lire les VRAIS avis Firebase
       ]);
 
       setUsers(usersRes.data.data.map(user => ({
@@ -81,12 +97,26 @@ const AdminDashboard = () => {
         dateCreation: quote.dateCreation
       })));
 
+      // Nouveau : traiter les avis Firebase
+      setReviews(reviewsRes.data.data.map(review => ({
+        id: review.firebaseId, // Utiliser l'ID Firebase
+        clientName: review.clientName, // Structure Firebase
+        clientRole: review.clientRole,
+        rating: review.rating, // Structure Firebase
+        message: review.message, // Structure Firebase
+        status: review.status, // Structure Firebase
+        projetId: review.projectId,
+        projetTitre: review.projectTitle || 'Projet non spécifié',
+        dateCreation: review.createdAt
+      })));
+
       // Calculer les statistiques
       setStats({
         totalUsers: usersRes.data.data.length,
         totalProjects: projectsRes.data.data.length,
         totalServices: servicesRes.data.data.length,
-        totalQuotes: quotesRes.data.data.length
+        totalQuotes: quotesRes.data.data.length,
+        totalReviews: reviewsRes.data.data.length // Nouveau
       });
 
     } catch (err) {
@@ -98,8 +128,19 @@ const AdminDashboard = () => {
   }, []); // Suppression de la dépendance api pour éviter la boucle infinie
 
   useEffect(() => {
+    // Vérifier l'authentification et les permissions
+    if (!isAuthenticated) {
+      navigate('/connexion');
+      return;
+    }
+    
+    if (user?.role !== 'Administrateur') {
+      navigate('/');
+      return;
+    }
+    
     fetchData();
-  }, []); // Appel unique au montage du composant
+  }, [isAuthenticated, user, navigate]); // Dépendances ajoutées
 
   // Actions CRUD pour les utilisateurs
   const handleDeleteUser = async (userId) => {
@@ -115,8 +156,22 @@ const AdminDashboard = () => {
   };
 
   const handleEditUser = (userId) => {
-    // TODO: Implémenter la modification d'utilisateur
-    console.log('Éditer utilisateur:', userId);
+    const user = users.find(u => u.id === userId);
+    if (user) {
+      // Séparer le nom complet en nom et prénom
+      const nameParts = user.name.split(' ');
+      const nom = nameParts.slice(0, -1).join(' '); // Tout sauf le dernier élément
+      const prenom = nameParts[nameParts.length - 1]; // Dernier élément
+      
+      setSelectedUser({
+        id: user.id,
+        email: user.email,
+        nom: nom,
+        prenom: prenom,
+        role: user.role
+      });
+      setShowEditUserModal(true);
+    }
   };
 
   // Actions CRUD pour les projets
@@ -133,8 +188,8 @@ const AdminDashboard = () => {
   };
 
   const handleEditProject = (projectId) => {
-    // TODO: Implémenter la modification de projet
-    console.log('Éditer projet:', projectId);
+    // TODO: Implémenter modal de modification de projet
+    alert(`Fonctionnalité de modification de projet ${projectId} à implémenter`);
   };
 
   // Actions CRUD pour les services
@@ -150,10 +205,7 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleEditService = (serviceId) => {
-    // TODO: Implémenter la modification de service
-    console.log('Éditer service:', serviceId);
-  };
+
 
   // Actions CRUD pour les devis
   const handleDeleteQuote = async (quoteId) => {
@@ -169,14 +221,143 @@ const AdminDashboard = () => {
   };
 
   const handleEditQuote = (quoteId) => {
-    // TODO: Implémenter la modification de devis
-    console.log('Éditer devis:', quoteId);
+    // TODO: Implémenter modal de modification de devis
+    alert(`Fonctionnalité de modification de devis ${quoteId} à implémenter`);
+  };
+
+  // NOUVEAU : Actions CRUD pour les avis Firebase
+  const handleDeleteReview = async (reviewId) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cet avis ?')) {
+      try {
+        // Pour Firebase, on utilise une route spéciale
+        await api.delete(`/avis/firebase/${reviewId}`);
+        setReviews(reviews.filter(review => review.id !== reviewId));
+        setStats(prev => ({ ...prev, totalReviews: prev.totalReviews - 1 }));
+      } catch (err) {
+        setError('Erreur lors de la suppression: ' + (err.response?.data?.message || err.message));
+      }
+    }
+  };
+
+  const handleEditReview = async (reviewId) => {
+    // TODO: Implémenter la modification d'avis avec modal
+    console.log('Éditer avis:', reviewId);
+    // Pour l'instant, on peut juste changer le statut
+    const newStatus = prompt('Nouveau statut (pending/approved/rejected):');
+    if (newStatus && ['pending', 'approved', 'rejected'].includes(newStatus)) {
+      try {
+        await api.put(`/avis/firebase/${reviewId}`, { status: newStatus });
+        fetchData(); // Recharger les données
+      } catch (err) {
+        setError('Erreur lors de la modification: ' + (err.response?.data?.message || err.message));
+      }
+    }
+  };
+
+  const handleValidateReview = async (reviewId, status) => {
+    try {
+      // Pour Firebase, on utilise une route spéciale
+      await api.patch(`/avis/firebase/${reviewId}/validate`, { status });
+      // Recharger les données
+      fetchData();
+    } catch (err) {
+      setError('Erreur lors de la validation: ' + (err.response?.data?.message || err.message));
+    }
   };
 
   // Actions d'ajout
-  const handleAddUser = () => console.log('Ajouter utilisateur');
-  const handleAddProject = () => console.log('Ajouter projet');
-  const handleAddService = () => console.log('Ajouter service');
+  const handleAddUser = () => {
+    setShowAddUserModal(true);
+  };
+
+  const handleUserAdded = (newUser) => {
+    // Ajouter le nouvel utilisateur à la liste
+    const userToAdd = {
+      id: newUser.id,
+      name: `${newUser.nom} ${newUser.prenom}`,
+      email: newUser.email,
+      role: newUser.role,
+      status: 'Actif',
+      avatar: `${newUser.nom[0]}${newUser.prenom[0]}`.toUpperCase(),
+      dateCreation: new Date().toISOString()
+    };
+    setUsers(prev => [userToAdd, ...prev]);
+    setStats(prev => ({ ...prev, totalUsers: prev.totalUsers + 1 }));
+  };
+
+  const handleUserUpdated = (updatedUser) => {
+    // Mettre à jour l'utilisateur dans la liste
+    const userToUpdate = {
+      id: updatedUser.idUtilisateur,
+      name: `${updatedUser.nom} ${updatedUser.prenom}`,
+      email: updatedUser.email,
+      role: updatedUser.role,
+      status: 'Actif',
+      avatar: `${updatedUser.nom[0]}${updatedUser.prenom[0]}`.toUpperCase(),
+      dateCreation: updatedUser.dateCreation
+    };
+    setUsers(prev => prev.map(user => user.id === userToUpdate.id ? userToUpdate : user));
+  };
+  
+  const handleAddProject = () => {
+    // TODO: Implémenter modal d'ajout de projet
+    alert('Fonctionnalité d\'ajout de projet à implémenter');
+  };
+  
+  const handleAddService = () => {
+    setSelectedService(null);
+    setIsEditService(false);
+    setShowServiceModal(true);
+  };
+
+  const handleEditService = (serviceId) => {
+    const service = services.find(s => s.id === serviceId);
+    if (service) {
+      setSelectedService(service);
+      setIsEditService(true);
+      setShowServiceModal(true);
+    }
+  };
+
+  const handleServiceAdded = (newService) => {
+    // Ajouter le nouveau service à la liste
+    const serviceToAdd = {
+      id: newService.idService,
+      name: newService.titre,
+      description: newService.description,
+      tarifBase: newService.tarifBase,
+      exemples: newService.exemples,
+      statut: newService.statut,
+      dateCreation: newService.dateCreation
+    };
+    setServices(prev => [serviceToAdd, ...prev]);
+    setStats(prev => ({ ...prev, totalServices: prev.totalServices + 1 }));
+  };
+
+  const handleServiceUpdated = (updatedService) => {
+    // Mettre à jour le service dans la liste
+    const serviceToUpdate = {
+      id: updatedService.idService,
+      name: updatedService.titre,
+      description: updatedService.description,
+      tarifBase: updatedService.tarifBase,
+      exemples: updatedService.exemples,
+      statut: updatedService.statut,
+      dateCreation: updatedService.dateCreation
+    };
+    setServices(prev => prev.map(service => service.id === serviceToUpdate.id ? serviceToUpdate : service));
+  };
+
+  // NOUVEAU : Synchroniser Firebase
+  const handleSyncFirebase = async () => {
+    try {
+      const response = await api.post('/avis/sync/firebase');
+      alert(response.data.message);
+      fetchData(); // Recharger les données
+    } catch (err) {
+      setError('Erreur synchronisation: ' + (err.response?.data?.message || err.message));
+    }
+  };
 
   const getStatusClass = (status) => {
     const statusMap = { 
@@ -186,10 +367,41 @@ const AdminDashboard = () => {
       'En attente': 'en-attente', 
       'Terminé': 'termine',
       'Accepté': 'accepte',
-      'Refusé': 'refuse'
+      'Refusé': 'refuse',
+      'pending': 'en-attente',
+      'approved': 'accepte',
+      'rejected': 'refuse'
     };
     return statusMap[status] || 'inactif';
   };
+
+  const renderStars = (rating) => {
+    return "★".repeat(rating) + "☆".repeat(5 - rating);
+  };
+
+  // Vérifier l'authentification
+  if (!isAuthenticated) {
+    return (
+      <div className="dashboard-container">
+        <div className="error-container">
+          <p className="error-message">Vous devez être connecté pour accéder à cette page</p>
+          <button onClick={() => navigate('/connexion')} className="retry-button">Se connecter</button>
+        </div>
+      </div>
+    );
+  }
+
+  // Vérifier les permissions
+  if (user?.role !== 'Administrateur') {
+    return (
+      <div className="dashboard-container">
+        <div className="error-container">
+          <p className="error-message">Vous n'avez pas les permissions pour accéder à cette page</p>
+          <button onClick={() => navigate('/')} className="retry-button">Retour à l'accueil</button>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) return (
     <div className="dashboard-container">
@@ -215,7 +427,7 @@ const AdminDashboard = () => {
         <div className="header-content">
           <div className="header-title">
             <h1 className="title">Administration</h1>
-            <p className="subtitle">Gérez les utilisateurs, services, projets et devis</p>
+            <p className="subtitle">Gérez les utilisateurs, services, projets, devis et avis</p>
           </div>
           <Settings size={24} color="#007bff" />
         </div>
@@ -260,6 +472,15 @@ const AdminDashboard = () => {
               <p>Devis</p>
             </div>
           </div>
+          <div className="stat-card">
+            <div className="stat-icon reviews">
+              <Star size={24} />
+            </div>
+            <div className="stat-content">
+              <h3>{stats.totalReviews}</h3>
+              <p>Avis</p>
+            </div>
+          </div>
         </div>
 
         {/* Actions */}
@@ -273,6 +494,10 @@ const AdminDashboard = () => {
             </button>
             <button className="action-button" onClick={handleAddProject}>
               <Plus size={16} /> Ajouter un Projet
+            </button>
+            {/* Supprimé : L'admin ne crée pas d'avis selon le cahier des charges */}
+            <button className="action-button" onClick={handleSyncFirebase}>
+              <MessageCircle size={16} /> Synchroniser Firebase
             </button>
           </div>
         </div>
@@ -304,6 +529,12 @@ const AdminDashboard = () => {
                 onClick={() => setActiveTab('quotes')}
               >
                 <MessageSquare size={16} /> Devis ({quotes.length})
+              </button>
+              <button 
+                className={`tab-button ${activeTab === 'reviews' ? 'active' : ''}`} 
+                onClick={() => setActiveTab('reviews')}
+              >
+                <Star size={16} /> Avis ({reviews.length})
               </button>
             </nav>
           </div>
@@ -376,42 +607,65 @@ const AdminDashboard = () => {
             {activeTab === 'services' && (
               <div>
                 <h2 className="section-title">Liste des Services</h2>
-                <div className="services-grid">
-                  {services.map((service) => (
-                    <div key={service.id} className="service-card">
-                      <div className="service-header">
-                        <div className="service-icon">
-                          <FileText size={24} />
-                        </div>
-                        <div className="service-actions">
-                          <button 
-                            className="icon-button edit" 
-                            onClick={() => handleEditService(service.id)}
-                            title="Modifier"
-                          >
-                            <Edit size={16} />
-                          </button>
-                          <button 
-                            className="icon-button delete" 
-                            onClick={() => handleDeleteService(service.id)}
-                            title="Supprimer"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </div>
-                      <div className="service-content">
-                        <h3 className="service-title">{service.name}</h3>
-                        <p className="service-description">{service.description}</p>
-                        <div className="service-details">
-                          <span className="service-price">Tarif: {service.tarifBase}€</span>
-                          {service.exemples && (
-                            <span className="service-examples">Exemples: {service.exemples}</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                <div style={{ overflowX: 'auto' }}>
+                  <table className="table">
+                    <thead className="table-header">
+                      <tr className="table-row">
+                        <th className="table-header-cell">Titre</th>
+                        <th className="table-header-cell">Description</th>
+                        <th className="table-header-cell">Tarif</th>
+                        <th className="table-header-cell">Statut</th>
+                        <th className="table-header-cell">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {services.map((service) => (
+                        <tr key={service.id} className="table-row">
+                          <td className="table-cell">
+                            <div className="service-info">
+                              <div className="service-icon-small">
+                                <FileText size={16} />
+                              </div>
+                              <div className="service-name">{service.name}</div>
+                            </div>
+                          </td>
+                          <td className="table-cell">
+                            <div className="service-description-cell">
+                              {service.description.length > 100 
+                                ? `${service.description.substring(0, 100)}...` 
+                                : service.description}
+                            </div>
+                          </td>
+                          <td className="table-cell">
+                            <span className="service-price">{service.tarifBase}€</span>
+                          </td>
+                          <td className="table-cell">
+                            <span className={`status-badge ${getStatusClass(service.statut)}`}>
+                              {service.statut === 'actif' ? 'Actif' : 'Inactif'}
+                            </span>
+                          </td>
+                          <td className="table-cell">
+                            <div className="action-buttons-table">
+                              <button 
+                                className="icon-button edit" 
+                                onClick={() => handleEditService(service.id)} 
+                                title="Modifier"
+                              >
+                                <Edit size={16} />
+                              </button>
+                              <button 
+                                className="icon-button delete" 
+                                onClick={() => handleDeleteService(service.id)} 
+                                title="Supprimer"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             )}
@@ -515,9 +769,109 @@ const AdminDashboard = () => {
                 </div>
               </div>
             )}
+
+            {/* NOUVEAU : Onglet Avis */}
+            {activeTab === 'reviews' && (
+              <div>
+                <h2 className="section-title">Liste des Avis Clients</h2>
+                <div className="reviews-grid">
+                  {reviews.map((review) => (
+                    <div key={review.id} className="review-card">
+                      <div className="review-header">
+                        <div className="review-icon">
+                          <Star size={24} />
+                        </div>
+                        <span className={`status-badge ${getStatusClass(review.status)}`}>
+                          {review.status === 'pending' ? 'En attente' : 
+                           review.status === 'approved' ? 'Approuvé' : 'Rejeté'}
+                        </span>
+                      </div>
+                      <div className="review-content">
+                        <h3 className="review-title">{review.clientName}</h3>
+                        {review.clientRole && (
+                          <p className="review-role">{review.clientRole}</p>
+                        )}
+                        <div className="review-rating">
+                          <span className="stars">{renderStars(review.rating)}</span>
+                          <span className="rating-text">({review.rating}/5)</span>
+                        </div>
+                        <p className="review-message">"{review.message}"</p>
+                        {review.projetTitre && (
+                          <p className="review-project">
+                            <strong>Projet:</strong> {review.projetTitre}
+                          </p>
+                        )}
+                      </div>
+                      <div className="review-actions">
+                        {review.status === 'pending' && (
+                          <>
+                            <button 
+                              className="review-action-button approve"
+                              onClick={() => handleValidateReview(review.id, 'approved')}
+                            >
+                              <Star size={16} /> Approuver
+                            </button>
+                            <button 
+                              className="review-action-button reject"
+                              onClick={() => handleValidateReview(review.id, 'rejected')}
+                            >
+                              <Trash2 size={16} /> Rejeter
+                            </button>
+                          </>
+                        )}
+                        <button 
+                          className="review-action-button modify"
+                          onClick={() => handleEditReview(review.id)}
+                        >
+                          <Edit size={16} /> Modifier
+                        </button>
+                        <button 
+                          className="review-action-button delete"
+                          onClick={() => handleDeleteReview(review.id)}
+                        >
+                          <Trash2 size={16} /> Supprimer
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Modal d'ajout d'utilisateur */}
+      <AddUserModal
+        isOpen={showAddUserModal}
+        onClose={() => setShowAddUserModal(false)}
+        onUserAdded={handleUserAdded}
+      />
+
+      {/* Modal de modification d'utilisateur */}
+      <EditUserModal
+        isOpen={showEditUserModal}
+        onClose={() => {
+          setShowEditUserModal(false);
+          setSelectedUser(null);
+        }}
+        onUserUpdated={handleUserUpdated}
+        user={selectedUser}
+      />
+
+      {/* Modal de service */}
+      <ServiceModal
+        isOpen={showServiceModal}
+        onClose={() => {
+          setShowServiceModal(false);
+          setSelectedService(null);
+          setIsEditService(false);
+        }}
+        onServiceAdded={handleServiceAdded}
+        onServiceUpdated={handleServiceUpdated}
+        service={selectedService}
+        isEdit={isEditService}
+      />
     </div>
   );
 };

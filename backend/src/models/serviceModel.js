@@ -2,77 +2,40 @@
 const { executeQuery } = require('../config/database');
 
 class ServiceModel {
-  // Créer un service
-  static async create(serviceData) {
-    const { titre, description, tarifBase, exemples } = serviceData;
-    
-    const query = `
-      INSERT INTO Service (titre, description, tarifBase, exemples)
-      VALUES (?, ?, ?, ?)
-    `;
-    
-    const result = await executeQuery(query, [titre, description, tarifBase, exemples]);
-    return result.insertId;
-  }
-
   // Récupérer tous les services
   static async getAll() {
-    const query = `
-      SELECT idService, titre, description, tarifBase, exemples, dateCreation
-      FROM Service
-      ORDER BY titre
-    `;
-    
-    return await executeQuery(query);
+    return await executeQuery('SELECT * FROM Service ORDER BY dateCreation DESC');
   }
 
   // Récupérer un service par ID
   static async getById(id) {
-    const query = `
-      SELECT idService, titre, description, tarifBase, exemples, dateCreation
-      FROM Service
-      WHERE idService = ?
-    `;
-    
-    const result = await executeQuery(query, [id]);
-    return result[0] || null;
+    const res = await executeQuery('SELECT * FROM Service WHERE idService = ?', [id]);
+    return res[0] || null;
+  }
+
+  // Créer un service
+  static async create({ titre, description, tarifBase, exemples }) {
+    return await executeQuery(
+      'INSERT INTO Service (titre, description, tarifBase, exemples) VALUES (?, ?, ?, ?)',
+      [titre, description, tarifBase, exemples]
+    );
   }
 
   // Mettre à jour un service
-  static async update(id, serviceData) {
-    const { titre, description, tarifBase, exemples } = serviceData;
-    
-    const query = `
-      UPDATE Service
-      SET titre = ?, description = ?, tarifBase = ?, exemples = ?
-      WHERE idService = ?
-    `;
-    
-    const result = await executeQuery(query, [titre, description, tarifBase, exemples, id]);
-    return result.affectedRows > 0;
+  static async update(id, { titre, description, tarifBase, exemples }) {
+    return await executeQuery(
+      'UPDATE Service SET titre=?, description=?, tarifBase=?, exemples=? WHERE idService=?',
+      [titre, description, tarifBase, exemples, id]
+    );
   }
 
   // Supprimer un service
   static async delete(id) {
-    const query = `
-      DELETE FROM Service
-      WHERE idService = ?
-    `;
-    
-    const result = await executeQuery(query, [id]);
-    return result.affectedRows > 0;
+    return await executeQuery('DELETE FROM Service WHERE idService = ?', [id]);
   }
 
-  // Vérifier si un titre existe déjà
-  static async titreExists(titre) {
-    const query = `
-      SELECT COUNT(*) as count
-      FROM Service
-      WHERE titre = ?
-    `;
-    
-    const result = await executeQuery(query, [titre]);
-    return result[0].count > 0;
+  static async getActive() {
+    return await executeQuery("SELECT * FROM Service WHERE statut = 'actif' ORDER BY dateCreation DESC");
   }
 }
 

@@ -44,15 +44,24 @@ const DevisPage = () => {
     typeServiceId: '',
     budgetEstime: '',
     description: '',
-    pasUnRobot: false
+    rgpd: false
   });
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Menu budget plus réaliste
+  const budgetOptions = [
+    { value: '0-1000', label: '0€ - 1 000€' },
+    { value: '1000-3000', label: '1 000€ - 3 000€' },
+    { value: '3000-6000', label: '3 000€ - 6 000€' },
+    { value: '6000-10000', label: '6 000€ - 10 000€' },
+    { value: '10000+', label: '10 000€ et plus' }
+  ];
+
   useEffect(() => {
     setLoading(true);
-    fetch('http://localhost:5000/api/services')
+    fetch('http://localhost:5000/api/services/public/actifs')
       .then(res => {
         if (!res.ok) throw new Error(`Erreur HTTP: ${res.status}`);
         return res.json();
@@ -79,8 +88,8 @@ const DevisPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.pasUnRobot) {
-      alert('Veuillez confirmer que vous n’êtes pas un robot.');
+    if (!formData.rgpd) {
+      alert('Veuillez accepter la politique de confidentialité et la RGPD.');
       return;
     }
     if (!formData.nom || !formData.prenom) {
@@ -116,7 +125,7 @@ const DevisPage = () => {
           typeServiceId: '',
           budgetEstime: '',
           description: '',
-          pasUnRobot: false
+          rgpd: false
         });
       } else {
         alert(data.message || 'Erreur lors de la demande de devis');
@@ -127,14 +136,6 @@ const DevisPage = () => {
       setLoading(false);
     }
   };
-
-  const budgetOptions = [
-    { value: '0-5000', label: '0€ - 5 000€' },
-    { value: '5000-15000', label: '5 000€ - 15 000€' },
-    { value: '15000-30000', label: '15 000€ - 30 000€' },
-    { value: '30000-50000', label: '30 000€ - 50 000€' },
-    { value: '50000+', label: '50 000€+' }
-  ];
 
   const processSteps = [
     "Analyse de votre demande",
@@ -281,16 +282,19 @@ const DevisPage = () => {
                 required
               />
             </div>
-            <div style={styles.checkboxContainer}>
-              <div style={styles.checkboxGroup}>
+            <div style={styles.fieldContainer}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <input
                   type="checkbox"
-                  name="pasUnRobot"
-                  checked={formData.pasUnRobot}
+                  name="rgpd"
+                  checked={formData.rgpd}
                   onChange={handleInputChange}
                   style={styles.checkbox}
+                  required
                 />
-                <label style={styles.checkboxLabel}>Je ne suis pas un robot (reCAPTCHA)</label>
+                <label style={styles.checkboxLabel}>
+                  J’accepte que mes données soient utilisées pour traiter ma demande, conformément à la <a href="/politique-confidentialite" target="_blank" rel="noopener noreferrer">politique de confidentialité</a> et à la réglementation sur la protection des données personnelles (RGPD).
+                </label>
               </div>
             </div>
             <button
