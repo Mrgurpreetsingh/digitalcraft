@@ -22,6 +22,9 @@ const handleValidationErrors = (req, res, next) => {
 // Route publique - Récupérer tous les services (accessible à tous)
 router.get('/', ServiceController.getAll);
 
+// Route publique - Récupérer les services actifs (affichage public)
+router.get('/public/actifs', ServiceController.getActive);
+
 // Route publique - Récupérer un service par ID (accessible à tous)
 router.get('/:id', ServiceController.getById);
 

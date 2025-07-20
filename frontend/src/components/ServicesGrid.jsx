@@ -10,12 +10,11 @@ function ServicesGrid({ services = [] }) {
     <div className="services-grid">
       {safeServices.map((service) => (
         <ServiceCard
-          key={service.id}
-          icon={service.icon}
-          title={service.title}
+          key={service.idService}
+          title={service.titre}
           description={service.description}
-          items={service.items}
-          linkText={service.linkText}
+          tarif={service.tarifBase}
+          items={service.exemples ? (Array.isArray(service.exemples) ? service.exemples : service.exemples.split(/,|\n/).map(e => e.trim()).filter(Boolean)) : []}
         />
       ))}
     </div>

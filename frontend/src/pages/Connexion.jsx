@@ -89,7 +89,7 @@ const ConnexionPage = () => {
     }
   };
 
-  const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LejF4MrAAAAANIX6ENamurC8EBYK9s9X0RJ3N_i';
+  const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
 
   return (
     <div className="connexion-container">
