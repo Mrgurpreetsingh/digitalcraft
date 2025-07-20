@@ -3,13 +3,13 @@ const admin = require('firebase-admin');
 
 // Configuration Firebase avec vos vraies clés
 const firebaseConfig = {
-  apiKey: process.env.FIREBASE_API_KEY || "AIzaSyD76HfIzMD7wavzyMlzKkYPN4tKDaZ2qiA",
-  authDomain: process.env.FIREBASE_AUTH_DOMAIN || "digitalcraft-9b517.firebaseapp.com",
-  projectId: process.env.FIREBASE_PROJECT_ID || "digitalcraft-9b517",
-  storageBucket: process.env.FIREBASE_STORAGE_BUCKET || "digitalcraft-9b517.firebasestorage.app",
-  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || "482838114462",
-  appId: process.env.FIREBASE_APP_ID || "1:482838114462:web:134818a1fd7a985d07cb8f",
-  measurementId: process.env.FIREBASE_MEASUREMENT_ID || "G-YG6K84J7R6"
+  apiKey: process.env.FIREBASE_API_KEY ,
+  authDomain: process.env.FIREBASE_AUTH_DOMAIN ,
+  projectId: process.env.FIREBASE_PROJECT_ID ,
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET ,
+  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID ,
+  appId: process.env.FIREBASE_APP_ID ,
+  measurementId: process.env.FIREBASE_MEASUREMENT_ID 
 };
 
 // Initialiser Firebase Admin SDK
