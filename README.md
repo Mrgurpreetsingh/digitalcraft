@@ -41,4 +41,34 @@ Ce projet est une application web développée avec React pour créer un site pr
 - Ajouter d'autres pages (ex. : Portfolio, Contact).
 - Intégrer une API backend (peu d'éléments statiques prévus).
 
+## Configuration MySQL et variables d'environnement backend
+
+Par défaut, la base de données MySQL dans Docker utilise un utilisateur applicatif dédié :
+
+- **DB_USER=app_user**
+- **DB_PASSWORD=app_password**
+- **DB_NAME=digitalcraft**
+- **DB_HOST=mysql** (nom du service Docker Compose)
+- **DB_PORT=3306**
+
+Assurez-vous que ces valeurs sont bien utilisées dans votre fichier `.env` du backend et dans les variables d'environnement du service backend dans `docker-compose.yml` et `docker-compose.prod.yml`.
+
+> ⚠️ **Ne pas utiliser root/root pour l'application** :
+> - L'utilisateur `root` est réservé à l'administration.
+> - L'utilisateur `app_user` est créé automatiquement par Docker Compose pour l'application.
+> - Pour phpMyAdmin, connectez-vous avec `app_user`/`app_password` pour voir les données de l'application.
+
+**Exemple de configuration dans `.env` :**
+```env
+DB_HOST=mysql
+DB_USER=app_user
+DB_PASSWORD=app_password
+DB_NAME=digitalcraft
+DB_PORT=3306
+```
+
+Pour un usage local sans Docker, adaptez `DB_HOST=localhost` et le port si besoin.
+
+---
+
 

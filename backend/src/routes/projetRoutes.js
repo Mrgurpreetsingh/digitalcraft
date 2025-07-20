@@ -23,6 +23,9 @@ const handleValidationErrors = (req, res, next) => {
 // Récupérer tous les projets (public)
 router.get('/', ProjetController.getAll);
 
+// Route pour les projets assignés à l'employé connecté
+router.get('/assigned', authenticateToken, requireEmployee, ProjetController.getAssignedToEmployee);
+
 // Récupérer un projet par ID (public)
 router.get('/:id', ProjetController.getById);
 

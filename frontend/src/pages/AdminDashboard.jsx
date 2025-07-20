@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import AddUserModal from '../components/AddUserModal';
 import EditUserModal from '../components/EditUserModal';
 import ServiceModal from '../components/ServiceModal';
+import ProjectModal from '../components/ProjectModal';
 import '../styles/AdminDashboard.css';
 
 const AdminDashboard = () => {
@@ -32,6 +33,10 @@ const AdminDashboard = () => {
   const [showServiceModal, setShowServiceModal] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
   const [isEditService, setIsEditService] = useState(false);
+  const [showProjectModal, setShowProjectModal] = useState(false);
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [clients, setClients] = useState([]);
+  const [employes, setEmployes] = useState([]);
 
   // Configuration axios avec token
   const api = axios.create({
@@ -83,7 +88,8 @@ const AdminDashboard = () => {
         description: service.description,
         tarifBase: service.tarifBase,
         exemples: service.exemples,
-        dateCreation: service.dateCreation
+        dateCreation: service.dateCreation,
+        statut: service.statut // Ajout du champ statut pour filtrage
       })));
 
       setQuotes(quotesRes.data.data.map(quote => ({
@@ -142,6 +148,20 @@ const AdminDashboard = () => {
     fetchData();
   }, [isAuthenticated, user, navigate]); // Dépendances ajoutées
 
+  // Récupérer clients et employés pour les dropdowns
+  useEffect(() => {
+    // Récupère tous les utilisateurs pour les listes déroulantes
+    api.get('/utilisateurs/employees-and-admins')
+      .then(res => {
+        setClients(res.data.data.filter(u => u.role === 'Client'));
+        setEmployes(res.data.data.filter(u => u.role === 'Employé'));
+      })
+      .catch(() => {
+        setClients([]);
+        setEmployes([]);
+      });
+  }, []);
+
   // Actions CRUD pour les utilisateurs
   const handleDeleteUser = async (userId) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {
@@ -187,9 +207,36 @@ const AdminDashboard = () => {
     }
   };
 
+  // Modification projet
   const handleEditProject = (projectId) => {
-    // TODO: Implémenter modal de modification de projet
-    alert(`Fonctionnalité de modification de projet ${projectId} à implémenter`);
+    const project = projects.find(p => p.id === projectId);
+    if (project) {
+      setSelectedProject({
+        ...project,
+        typeServiceId: project.serviceId || '',
+        clientId: project.clientId || '',
+        employeId: project.employeId || ''
+      });
+      setShowProjectModal(true);
+    }
+  };
+
+  // Sauvegarde (ajout ou modif)
+  const handleProjectSave = async (form) => {
+    try {
+      if (selectedProject) {
+        // Modification
+        await api.put(`/projets/${selectedProject.id}`, form);
+      } else {
+        // Ajout
+        await api.post('/projets', form);
+      }
+      setShowProjectModal(false);
+      setSelectedProject(null);
+      fetchData(); // Rafraîchir la liste
+    } catch (err) {
+      setError('Erreur lors de la sauvegarde du projet: ' + (err.response?.data?.message || err.message));
+    }
   };
 
   // Actions CRUD pour les services
@@ -299,11 +346,6 @@ const AdminDashboard = () => {
     setUsers(prev => prev.map(user => user.id === userToUpdate.id ? userToUpdate : user));
   };
   
-  const handleAddProject = () => {
-    // TODO: Implémenter modal d'ajout de projet
-    alert('Fonctionnalité d\'ajout de projet à implémenter');
-  };
-  
   const handleAddService = () => {
     setSelectedService(null);
     setIsEditService(false);
@@ -359,6 +401,12 @@ const AdminDashboard = () => {
     }
   };
 
+  // Ajout projet
+  const handleAddProject = () => {
+    setSelectedProject(null);
+    setShowProjectModal(true);
+  };
+
   const getStatusClass = (status) => {
     const statusMap = { 
       'Actif': 'actif', 
@@ -382,10 +430,10 @@ const AdminDashboard = () => {
   // Vérifier l'authentification
   if (!isAuthenticated) {
     return (
-      <div className="dashboard-container">
-        <div className="error-container">
-          <p className="error-message">Vous devez être connecté pour accéder à cette page</p>
-          <button onClick={() => navigate('/connexion')} className="retry-button">Se connecter</button>
+      <div className="admin-dashboard-container">
+        <div className="admin-error-container">
+          <p className="admin-error-message">Vous devez être connecté pour accéder à cette page</p>
+          <button onClick={() => navigate('/connexion')} className="admin-retry-button">Se connecter</button>
         </div>
       </div>
     );
@@ -394,89 +442,89 @@ const AdminDashboard = () => {
   // Vérifier les permissions
   if (user?.role !== 'Administrateur') {
     return (
-      <div className="dashboard-container">
-        <div className="error-container">
-          <p className="error-message">Vous n'avez pas les permissions pour accéder à cette page</p>
-          <button onClick={() => navigate('/')} className="retry-button">Retour à l'accueil</button>
+      <div className="admin-dashboard-container">
+        <div className="admin-error-container">
+          <p className="admin-error-message">Vous n'avez pas les permissions pour accéder à cette page</p>
+          <button onClick={() => navigate('/')} className="admin-retry-button">Retour à l'accueil</button>
         </div>
       </div>
     );
   }
 
   if (loading) return (
-    <div className="dashboard-container">
-      <div className="loading-container">
-        <div className="loading-spinner"></div>
+    <div className="admin-dashboard-container">
+      <div className="admin-loading-container">
+        <div className="admin-loading-spinner"></div>
         <p>Chargement des données...</p>
       </div>
     </div>
   );
 
   if (error) return (
-    <div className="dashboard-container">
-      <div className="error-container">
-        <p className="error-message">{error}</p>
-        <button onClick={fetchData} className="retry-button">Réessayer</button>
+    <div className="admin-dashboard-container">
+      <div className="admin-error-container">
+        <p className="admin-error-message">{error}</p>
+        <button onClick={fetchData} className="admin-retry-button">Réessayer</button>
       </div>
     </div>
   );
 
   return (
-    <div className="dashboard-container">
-      <div className="header">
-        <div className="header-content">
-          <div className="header-title">
-            <h1 className="title">Administration</h1>
-            <p className="subtitle">Gérez les utilisateurs, services, projets, devis et avis</p>
+    <div className="admin-dashboard-container">
+      <div className="admin-header">
+        <div className="admin-header-content">
+          <div className="admin-header-title">
+            <h1 className="admin-title">Administration</h1>
+            <p className="admin-subtitle">Gérez les utilisateurs, services, projets, devis et avis</p>
           </div>
           <Settings size={24} color="#007bff" />
         </div>
       </div>
 
-      <div className="main-content">
+      <div className="admin-main-content">
         {/* Statistiques */}
-        <div className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-icon users">
-              <Users size={24} />
+        <div className="admin-stats-grid">
+          <div className="admin-stat-card">
+            <div className="admin-stat-icon">
+              <Users size={24} color="#2563eb" />
             </div>
-            <div className="stat-content">
+            <div className="admin-stat-content">
               <h3>{stats.totalUsers}</h3>
               <p>Utilisateurs</p>
             </div>
           </div>
-          <div className="stat-card">
-            <div className="stat-icon projects">
-              <FolderOpen size={24} />
+          <div className="admin-stat-card">
+            <div className="admin-stat-icon">
+              <FolderOpen size={24} color="#2563eb" />
             </div>
-            <div className="stat-content">
+            <div className="admin-stat-content">
               <h3>{stats.totalProjects}</h3>
               <p>Projets</p>
             </div>
           </div>
-          <div className="stat-card">
-            <div className="stat-icon services">
-              <FileText size={24} />
+          <div className="admin-stat-card">
+            <div className="admin-stat-icon">
+              <FileText size={24} color="#2563eb" />
             </div>
-            <div className="stat-content">
+            <div className="admin-stat-content">
               <h3>{stats.totalServices}</h3>
               <p>Services</p>
             </div>
           </div>
-          <div className="stat-card">
-            <div className="stat-icon quotes">
-              <MessageSquare size={24} />
+          <div className="admin-stat-card">
+            <div className="admin-stat-icon">
+              <MessageSquare size={24} color="#2563eb" />
             </div>
-            <div className="stat-content">
+            <div className="admin-stat-content">
               <h3>{stats.totalQuotes}</h3>
               <p>Devis</p>
             </div>
           </div>
-          <div className="stat-card">
-            <div className="stat-icon reviews">
-              <Star size={24} />
+          <div className="admin-stat-card">
+            <div className="admin-stat-icon">
+              <Star size={24} color="#2563eb" />
             </div>
-            <div className="stat-content">
+            <div className="admin-stat-content">
               <h3>{stats.totalReviews}</h3>
               <p>Avis</p>
             </div>
@@ -484,54 +532,54 @@ const AdminDashboard = () => {
         </div>
 
         {/* Actions */}
-        <div className="action-card">
-          <div className="action-buttons">
-            <button className="action-button" onClick={handleAddUser}>
+        <div className="admin-action-card">
+          <div className="admin-action-buttons">
+            <button className="admin-action-button" onClick={handleAddUser}>
               <User size={16} /> Ajouter un Utilisateur
             </button>
-            <button className="action-button" onClick={handleAddService}>
+            <button className="admin-action-button" onClick={handleAddService}>
               <FileText size={16} /> Ajouter un Service
             </button>
-            <button className="action-button" onClick={handleAddProject}>
+            <button className="admin-action-button" onClick={handleAddProject}>
               <Plus size={16} /> Ajouter un Projet
             </button>
             {/* Supprimé : L'admin ne crée pas d'avis selon le cahier des charges */}
-            <button className="action-button" onClick={handleSyncFirebase}>
+            <button className="admin-action-button" onClick={handleSyncFirebase}>
               <MessageCircle size={16} /> Synchroniser Firebase
             </button>
           </div>
         </div>
 
         {/* Contenu principal */}
-        <div className="content-card">
-          <div className="tab-container">
-            <nav className="tab-nav">
+        <div className="admin-content-card">
+          <div className="admin-tab-container">
+            <nav className="admin-tab-nav">
               <button 
-                className={`tab-button ${activeTab === 'users' ? 'active' : ''}`} 
+                className={`admin-tab-button ${activeTab === 'users' ? 'active' : ''}`} 
                 onClick={() => setActiveTab('users')}
               >
                 <Users size={16} /> Utilisateurs ({users.length})
               </button>
               <button 
-                className={`tab-button ${activeTab === 'services' ? 'active' : ''}`} 
+                className={`admin-tab-button ${activeTab === 'services' ? 'active' : ''}`} 
                 onClick={() => setActiveTab('services')}
               >
                 <FileText size={16} /> Services ({services.length})
               </button>
               <button 
-                className={`tab-button ${activeTab === 'projects' ? 'active' : ''}`} 
+                className={`admin-tab-button ${activeTab === 'projects' ? 'active' : ''}`} 
                 onClick={() => setActiveTab('projects')}
               >
                 <FolderOpen size={16} /> Projets ({projects.length})
               </button>
               <button 
-                className={`tab-button ${activeTab === 'quotes' ? 'active' : ''}`} 
+                className={`admin-tab-button ${activeTab === 'quotes' ? 'active' : ''}`} 
                 onClick={() => setActiveTab('quotes')}
               >
                 <MessageSquare size={16} /> Devis ({quotes.length})
               </button>
               <button 
-                className={`tab-button ${activeTab === 'reviews' ? 'active' : ''}`} 
+                className={`admin-tab-button ${activeTab === 'reviews' ? 'active' : ''}`} 
                 onClick={() => setActiveTab('reviews')}
               >
                 <Star size={16} /> Avis ({reviews.length})
@@ -539,55 +587,55 @@ const AdminDashboard = () => {
             </nav>
           </div>
 
-          <div className="tab-content">
+          <div className="admin-tab-content">
             {/* Onglet Utilisateurs */}
             {activeTab === 'users' && (
               <div>
-                <h2 className="section-title">Liste des Utilisateurs</h2>
+                <h2 className="admin-section-title">Liste des Utilisateurs</h2>
                 <div style={{ overflowX: 'auto' }}>
-                  <table className="table">
-                    <thead className="table-header">
-                      <tr className="table-row">
-                        <th className="table-header-cell">Nom</th>
-                        <th className="table-header-cell">Email</th>
-                        <th className="table-header-cell">Rôle</th>
-                        <th className="table-header-cell">Statut</th>
-                        <th className="table-header-cell">Actions</th>
+                  <table className="admin-table">
+                    <thead className="admin-table-header">
+                      <tr className="admin-table-row">
+                        <th className="admin-table-header-cell">Nom</th>
+                        <th className="admin-table-header-cell">Email</th>
+                        <th className="admin-table-header-cell">Rôle</th>
+                        <th className="admin-table-header-cell">Statut</th>
+                        <th className="admin-table-header-cell">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {users.map((user) => (
-                        <tr key={user.id} className="table-row">
-                          <td className="table-cell">
-                            <div className="user-info">
-                              <div className="avatar">
-                                <span className="avatar-text">{user.avatar}</span>
+                        <tr key={user.id} className="admin-table-row">
+                          <td className="admin-table-cell">
+                            <div className="admin-user-info">
+                              <div className="admin-avatar">
+                                <span className="admin-avatar-text">{user.avatar}</span>
                               </div>
-                              <div className="user-name">{user.name}</div>
+                              <div className="admin-user-name">{user.name}</div>
                             </div>
                           </td>
-                          <td className="table-cell">{user.email}</td>
-                          <td className="table-cell">
-                            <span className={`role-badge ${user.role.toLowerCase()}`}>
+                          <td className="admin-table-cell">{user.email}</td>
+                          <td className="admin-table-cell">
+                            <span className={`admin-role-badge ${user.role.toLowerCase()}`}>
                               {user.role}
                             </span>
                           </td>
-                          <td className="table-cell">
-                            <span className={`status-badge ${getStatusClass(user.status)}`}>
+                          <td className="admin-table-cell">
+                            <span className={`admin-status-badge ${getStatusClass(user.status)}`}>
                               {user.status}
                             </span>
                           </td>
-                          <td className="table-cell">
-                            <div className="action-buttons-table">
+                          <td className="admin-table-cell">
+                            <div className="admin-action-buttons-table">
                               <button 
-                                className="icon-button edit" 
+                                className="admin-icon-button edit" 
                                 onClick={() => handleEditUser(user.id)} 
                                 title="Modifier"
                               >
                                 <Edit size={16} />
                               </button>
                               <button 
-                                className="icon-button delete" 
+                                className="admin-icon-button delete" 
                                 onClick={() => handleDeleteUser(user.id)} 
                                 title="Supprimer"
                               >
@@ -606,55 +654,55 @@ const AdminDashboard = () => {
             {/* Onglet Services */}
             {activeTab === 'services' && (
               <div>
-                <h2 className="section-title">Liste des Services</h2>
+                <h2 className="admin-section-title">Liste des Services</h2>
                 <div style={{ overflowX: 'auto' }}>
-                  <table className="table">
-                    <thead className="table-header">
-                      <tr className="table-row">
-                        <th className="table-header-cell">Titre</th>
-                        <th className="table-header-cell">Description</th>
-                        <th className="table-header-cell">Tarif</th>
-                        <th className="table-header-cell">Statut</th>
-                        <th className="table-header-cell">Actions</th>
+                  <table className="admin-table">
+                    <thead className="admin-table-header">
+                      <tr className="admin-table-row">
+                        <th className="admin-table-header-cell">Titre</th>
+                        <th className="admin-table-header-cell">Description</th>
+                        <th className="admin-table-header-cell">Tarif</th>
+                        <th className="admin-table-header-cell">Statut</th>
+                        <th className="admin-table-header-cell">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {services.map((service) => (
-                        <tr key={service.id} className="table-row">
-                          <td className="table-cell">
-                            <div className="service-info">
-                              <div className="service-icon-small">
-                                <FileText size={16} />
+                        <tr key={service.id} className="admin-table-row">
+                          <td className="admin-table-cell">
+                            <div className="admin-service-info">
+                              <div className="admin-service-icon-small">
+                                <FileText size={16} color="#2563eb" />
                               </div>
-                              <div className="service-name">{service.name}</div>
+                              <div className="admin-service-name">{service.name}</div>
                             </div>
                           </td>
-                          <td className="table-cell">
-                            <div className="service-description-cell">
+                          <td className="admin-table-cell">
+                            <div className="admin-service-description-cell">
                               {service.description.length > 100 
                                 ? `${service.description.substring(0, 100)}...` 
                                 : service.description}
                             </div>
                           </td>
-                          <td className="table-cell">
-                            <span className="service-price">{service.tarifBase}€</span>
+                          <td className="admin-table-cell">
+                            <span className="admin-service-price">{service.tarifBase}€</span>
                           </td>
-                          <td className="table-cell">
-                            <span className={`status-badge ${getStatusClass(service.statut)}`}>
+                          <td className="admin-table-cell">
+                            <span className={`admin-status-badge ${getStatusClass(service.statut)}`}>
                               {service.statut === 'actif' ? 'Actif' : 'Inactif'}
                             </span>
                           </td>
-                          <td className="table-cell">
-                            <div className="action-buttons-table">
+                          <td className="admin-table-cell">
+                            <div className="admin-action-buttons-table">
                               <button 
-                                className="icon-button edit" 
+                                className="admin-icon-button edit" 
                                 onClick={() => handleEditService(service.id)} 
                                 title="Modifier"
                               >
                                 <Edit size={16} />
                               </button>
                               <button 
-                                className="icon-button delete" 
+                                className="admin-icon-button delete" 
                                 onClick={() => handleDeleteService(service.id)} 
                                 title="Supprimer"
                               >
@@ -673,36 +721,36 @@ const AdminDashboard = () => {
             {/* Onglet Projets */}
             {activeTab === 'projects' && (
               <div>
-                <h2 className="section-title">Liste des Projets</h2>
-                <div className="projects-grid">
+                <h2 className="admin-section-title">Liste des Projets</h2>
+                <div className="admin-projects-grid">
                   {projects.map((project) => (
-                    <div key={project.id} className="project-card">
-                      <div className="project-header">
-                        <div className="project-icon">
-                          <FolderOpen size={24} />
+                    <div key={project.id} className="admin-project-card">
+                      <div className="admin-project-header">
+                        <div className="admin-project-icon">
+                          <FolderOpen size={24} color="#2563eb" />
                         </div>
-                        <span className={`status-badge ${getStatusClass(project.status)}`}>
+                        <span className={`admin-status-badge ${getStatusClass(project.status)}`}>
                           {project.status}
                         </span>
                       </div>
-                      <div className="project-content">
-                        <h3 className="project-title">{project.name}</h3>
-                        <p className="project-description">{project.description}</p>
-                        <div className="project-details">
+                      <div className="admin-project-content">
+                        <h3 className="admin-project-title">{project.name}</h3>
+                        <p className="admin-project-description">{project.description}</p>
+                        <div className="admin-project-details">
                           <p><strong>Service:</strong> {project.service || 'Non assigné'}</p>
                           <p><strong>Client:</strong> {project.client}</p>
                           <p><strong>Employé:</strong> {project.employe}</p>
                         </div>
                       </div>
-                      <div className="project-actions">
+                      <div className="admin-project-actions">
                         <button 
-                          className="project-action-button modify"
+                          className="admin-project-action-button modify"
                           onClick={() => handleEditProject(project.id)}
                         >
                           <Edit size={16} /> Modifier
                         </button>
                         <button 
-                          className="project-action-button delete"
+                          className="admin-project-action-button delete"
                           onClick={() => handleDeleteProject(project.id)}
                         >
                           <Trash2 size={16} /> Supprimer
@@ -717,44 +765,44 @@ const AdminDashboard = () => {
             {/* Onglet Devis */}
             {activeTab === 'quotes' && (
               <div>
-                <h2 className="section-title">Liste des Devis</h2>
+                <h2 className="admin-section-title">Liste des Devis</h2>
                 <div style={{ overflowX: 'auto' }}>
-                  <table className="table">
-                    <thead className="table-header">
-                      <tr className="table-row">
-                        <th className="table-header-cell">Numéro</th>
-                        <th className="table-header-cell">Demandeur</th>
-                        <th className="table-header-cell">Email</th>
-                        <th className="table-header-cell">Service</th>
-                        <th className="table-header-cell">Budget</th>
-                        <th className="table-header-cell">Statut</th>
-                        <th className="table-header-cell">Actions</th>
+                  <table className="admin-table">
+                    <thead className="admin-table-header">
+                      <tr className="admin-table-row">
+                        <th className="admin-table-header-cell">Numéro</th>
+                        <th className="admin-table-header-cell">Demandeur</th>
+                        <th className="admin-table-header-cell">Email</th>
+                        <th className="admin-table-header-cell">Service</th>
+                        <th className="admin-table-header-cell">Budget</th>
+                        <th className="admin-table-header-cell">Statut</th>
+                        <th className="admin-table-header-cell">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {quotes.map((quote) => (
-                        <tr key={quote.id} className="table-row">
-                          <td className="table-cell">{quote.numero}</td>
-                          <td className="table-cell">{quote.demandeur}</td>
-                          <td className="table-cell">{quote.email}</td>
-                          <td className="table-cell">{quote.service || 'Non spécifié'}</td>
-                          <td className="table-cell">{quote.budget}</td>
-                          <td className="table-cell">
-                            <span className={`status-badge ${getStatusClass(quote.status)}`}>
+                        <tr key={quote.id} className="admin-table-row">
+                          <td className="admin-table-cell">{quote.numero}</td>
+                          <td className="admin-table-cell">{quote.demandeur}</td>
+                          <td className="admin-table-cell">{quote.email}</td>
+                          <td className="admin-table-cell">{quote.service || 'Non spécifié'}</td>
+                          <td className="admin-table-cell">{quote.budget}</td>
+                          <td className="admin-table-cell">
+                            <span className={`admin-status-badge ${getStatusClass(quote.status)}`}>
                               {quote.status}
                             </span>
                           </td>
-                          <td className="table-cell">
-                            <div className="action-buttons-table">
+                          <td className="admin-table-cell">
+                            <div className="admin-action-buttons-table">
                               <button 
-                                className="icon-button edit" 
+                                className="admin-icon-button edit" 
                                 onClick={() => handleEditQuote(quote.id)} 
                                 title="Modifier"
                               >
                                 <Edit size={16} />
                               </button>
                               <button 
-                                className="icon-button delete" 
+                                className="admin-icon-button delete" 
                                 onClick={() => handleDeleteQuote(quote.id)} 
                                 title="Supprimer"
                               >
@@ -773,46 +821,46 @@ const AdminDashboard = () => {
             {/* NOUVEAU : Onglet Avis */}
             {activeTab === 'reviews' && (
               <div>
-                <h2 className="section-title">Liste des Avis Clients</h2>
-                <div className="reviews-grid">
+                <h2 className="admin-section-title">Liste des Avis Clients</h2>
+                <div className="admin-reviews-grid">
                   {reviews.map((review) => (
-                    <div key={review.id} className="review-card">
-                      <div className="review-header">
-                        <div className="review-icon">
-                          <Star size={24} />
+                    <div key={review.id} className="admin-review-card">
+                      <div className="admin-review-header">
+                        <div className="admin-review-icon">
+                          <Star size={24} color="#2563eb" />
                         </div>
-                        <span className={`status-badge ${getStatusClass(review.status)}`}>
+                        <span className={`admin-status-badge ${getStatusClass(review.status)}`}>
                           {review.status === 'pending' ? 'En attente' : 
                            review.status === 'approved' ? 'Approuvé' : 'Rejeté'}
                         </span>
                       </div>
-                      <div className="review-content">
-                        <h3 className="review-title">{review.clientName}</h3>
+                      <div className="admin-review-content">
+                        <h3 className="admin-review-title">{review.clientName}</h3>
                         {review.clientRole && (
-                          <p className="review-role">{review.clientRole}</p>
+                          <p className="admin-review-role">{review.clientRole}</p>
                         )}
-                        <div className="review-rating">
-                          <span className="stars">{renderStars(review.rating)}</span>
-                          <span className="rating-text">({review.rating}/5)</span>
+                        <div className="admin-review-rating">
+                          <span className="admin-stars">{renderStars(review.rating)}</span>
+                          <span className="admin-rating-text">({review.rating}/5)</span>
                         </div>
-                        <p className="review-message">"{review.message}"</p>
+                        <p className="admin-review-message">"{review.message}"</p>
                         {review.projetTitre && (
-                          <p className="review-project">
+                          <p className="admin-review-project">
                             <strong>Projet:</strong> {review.projetTitre}
                           </p>
                         )}
                       </div>
-                      <div className="review-actions">
+                      <div className="admin-review-actions">
                         {review.status === 'pending' && (
                           <>
                             <button 
-                              className="review-action-button approve"
+                              className="admin-review-action-button approve"
                               onClick={() => handleValidateReview(review.id, 'approved')}
                             >
                               <Star size={16} /> Approuver
                             </button>
                             <button 
-                              className="review-action-button reject"
+                              className="admin-review-action-button reject"
                               onClick={() => handleValidateReview(review.id, 'rejected')}
                             >
                               <Trash2 size={16} /> Rejeter
@@ -820,13 +868,13 @@ const AdminDashboard = () => {
                           </>
                         )}
                         <button 
-                          className="review-action-button modify"
+                          className="admin-review-action-button modify"
                           onClick={() => handleEditReview(review.id)}
                         >
                           <Edit size={16} /> Modifier
                         </button>
                         <button 
-                          className="review-action-button delete"
+                          className="admin-review-action-button delete"
                           onClick={() => handleDeleteReview(review.id)}
                         >
                           <Trash2 size={16} /> Supprimer
@@ -871,6 +919,17 @@ const AdminDashboard = () => {
         onServiceUpdated={handleServiceUpdated}
         service={selectedService}
         isEdit={isEditService}
+      />
+
+      {/* Modal de projet */}
+      <ProjectModal
+        isOpen={showProjectModal}
+        onClose={() => { setShowProjectModal(false); setSelectedProject(null); }}
+        onSave={handleProjectSave}
+        services={services.filter(s => s.statut === 'actif')}
+        clients={clients}
+        employes={employes}
+        project={selectedProject}
       />
     </div>
   );

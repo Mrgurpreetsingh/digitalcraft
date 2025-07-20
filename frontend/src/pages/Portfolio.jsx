@@ -2,11 +2,14 @@ import React, { useEffect, useState } from 'react';
 import '../styles/Portfolio.css';
 import ProjectGrid from '../components/PortfolioGrid';
 import axios from 'axios';
+import ProjectDetailModal from '../components/ProjectDetailModal';
 
 const Portfolio = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedService, setSelectedService] = useState('Tous');
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [avisList, setAvisList] = useState([]);
 
   useEffect(() => {
     axios.get('http://localhost:5000/api/projets?statut=Publié')
@@ -15,6 +18,15 @@ const Portfolio = () => {
         setLoading(false);
       })
       .catch(() => setLoading(false));
+  }, []);
+
+  // Récupérer les avis Firebase (status approved)
+  useEffect(() => {
+    axios.get('http://localhost:5000/api/avis/debug/firebase')
+      .then(res => {
+        setAvisList(res.data.data.filter(a => a.status === 'approved'));
+      })
+      .catch(() => setAvisList([]));
   }, []);
 
   // Récupère la liste unique des services présents dans les projets
@@ -27,6 +39,11 @@ const Portfolio = () => {
   const filteredProjects = selectedService === 'Tous'
     ? projects
     : projects.filter(p => (p.serviceTitre || p.category) === selectedService);
+
+  // Trouver l'avis lié au projet sélectionné
+  const avisForProject = selectedProject
+    ? avisList.find(a => a.projectId === selectedProject.idProjet && a.status === 'approved')
+    : null;
 
   return (
     <div className="portfolio-container">
@@ -71,8 +88,20 @@ const Portfolio = () => {
           </select>
         </div>
 
-        {loading ? <p>Chargement...</p> : <ProjectGrid projects={filteredProjects} />}
+        {loading ? <p>Chargement...</p> :
+          <ProjectGrid
+            projects={filteredProjects}
+            onProjectClick={setSelectedProject}
+          />
+        }
       </section>
+
+      {/* Modal détail projet + avis */}
+      <ProjectDetailModal
+        project={selectedProject}
+        avis={avisForProject}
+        onClose={() => setSelectedProject(null)}
+      />
     </div>
   );
 };

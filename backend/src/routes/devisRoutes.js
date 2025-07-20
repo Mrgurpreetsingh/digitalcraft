@@ -23,6 +23,9 @@ const handleValidationErrors = (req, res, next) => {
 // Récupérer tous les devis (admin/employé)
 router.get('/', authenticateToken, requireEmployee, DevisController.getAll);
 
+// Route pour les devis assignés à l'employé connecté
+router.get('/assigned', authenticateToken, requireEmployee, DevisController.getAssignedToEmployee);
+
 // Récupérer un devis par ID (admin/employé)
 router.get('/:id', authenticateToken, requireEmployee, DevisController.getById);
 

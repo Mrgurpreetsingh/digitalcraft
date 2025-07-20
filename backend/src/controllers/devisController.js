@@ -216,6 +216,24 @@ class DevisController {
       });
     }
   }
+
+  // Récupérer les devis assignés à l'employé connecté
+  static async getAssignedToEmployee(req, res) {
+    try {
+      const employeId = req.user.idUtilisateur || req.user.id;
+      const query = `
+        SELECT d.*, s.titre as serviceNom
+        FROM Devis d
+        LEFT JOIN Service s ON d.typeServiceId = s.idService
+        WHERE d.employeId = ?
+        ORDER BY d.dateCreation DESC
+      `;
+      const results = await executeQuery(query, [employeId]);
+      res.json({ success: true, data: results });
+    } catch (error) {
+      res.status(500).json({ success: false, message: 'Erreur serveur' });
+    }
+  }
 }
 
 // Fonction pour générer un numéro de devis unique
