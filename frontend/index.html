@@ -1,14 +1,92 @@
 <!doctype html>
-<html lang="en">
+<html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500&family=Inter:wght@400&display=swap" rel="stylesheet">
-    <title>Vite + React</title>
+    
+    <!-- SEO Meta Tags -->
+    <title>DigitalCraft - Agence Web & Marketing Digital | Création de Sites Web & Applications</title>
+    <meta name="description" content="DigitalCraft, agence web spécialisée dans la création de sites web, applications mobiles et marketing digital. Solutions sur mesure pour entreprises et startups. Expert en développement web, SEO et design UX/UI." />
+    <meta name="keywords" content="agence web, création site web, application mobile, marketing digital, développement web, SEO, design UX/UI, e-commerce, startup, entreprise" />
+    <meta name="author" content="DigitalCraft" />
+    <meta name="robots" content="index, follow" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://digitalcraft.fr/" />
+    <meta property="og:title" content="DigitalCraft - Agence Web & Marketing Digital" />
+    <meta property="og:description" content="Création de sites web, applications mobiles et solutions marketing digital sur mesure. Expert en développement web et design UX/UI." />
+    <meta property="og:image" content="https://digitalcraft.fr/og-image.jpg" />
+    <meta property="og:site_name" content="DigitalCraft" />
+    <meta property="og:locale" content="fr_FR" />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://digitalcraft.fr/" />
+    <meta property="twitter:title" content="DigitalCraft - Agence Web & Marketing Digital" />
+    <meta property="twitter:description" content="Création de sites web, applications mobiles et solutions marketing digital sur mesure." />
+    <meta property="twitter:image" content="https://digitalcraft.fr/twitter-image.jpg" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    
+    <!-- Preconnect pour performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://www.google-analytics.com" />
+    
+    <!-- Fonts optimisées -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Structured Data / Schema.org -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "DigitalCraft",
+      "url": "https://digitalcraft.fr",
+      "logo": "https://digitalcraft.fr/logo.png",
+      "description": "Agence web spécialisée dans la création de sites web, applications mobiles et marketing digital",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Paris",
+        "addressCountry": "FR"
+      },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+33-1-23-45-67-89",
+        "contactType": "customer service",
+        "email": "contact@digitalcraft.fr"
+      },
+      "sameAs": [
+        "https://www.linkedin.com/company/digitalcraft",
+        "https://twitter.com/digitalcraft_fr"
+      ]
+    }
+    </script>
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#2563eb" />
+    <meta name="msapplication-TileColor" content="#2563eb" />
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://digitalcraft.fr/" />
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root" role="main" aria-label="Application principale DigitalCraft"></div>
     <script type="module" src="/src/main.jsx"></script>
+    
+    <!-- Google Analytics (optionnel) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'GA_MEASUREMENT_ID');
+    </script>
   </body>
 </html>

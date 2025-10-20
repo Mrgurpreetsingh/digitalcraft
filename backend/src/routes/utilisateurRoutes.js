@@ -20,7 +20,9 @@ const verifyCaptcha = require('../middleware/verifyCaptcha');
 
 // Routes publiques
 router.post('/register', validateUserRegistration, UtilisateurController.register);
-router.post('/login', validateUserLogin, verifyCaptcha, UtilisateurController.login);
+
+ router.post('/login', validateUserLogin, verifyCaptcha, UtilisateurController.login);
+//router.post('/login', validateUserLogin, UtilisateurController.login);
 
 // Route admin pour créer des utilisateurs (sans reCAPTCHA)
 router.post('/admin/create', authenticateToken, requireAdmin, [

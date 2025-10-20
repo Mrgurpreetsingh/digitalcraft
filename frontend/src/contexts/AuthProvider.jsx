@@ -1,6 +1,7 @@
 // src/contexts/AuthProvider.jsx
 import React, { useState, useEffect } from 'react';
 import { AuthContext } from './AuthContext';
+import { authAPI } from '../services/api';
 
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -9,30 +10,57 @@ export const AuthProvider = ({ children }) => {
 
   // Vérifier l'authentification au chargement
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const role = localStorage.getItem('role');
-    
-    if (token && role) {
-      setIsAuthenticated(true);
-      setUser({ role });
-    }
-    setLoading(false);
+    const checkAuth = async () => {
+      const token = localStorage.getItem('token');
+      const userData = localStorage.getItem('user');
+      
+      if (token && userData) {
+        try {
+          // Vérifier la validité du token avec le backend
+          const response = await authAPI.getProfile();
+          if (response.data.success) {
+            setIsAuthenticated(true);
+            setUser(response.data.data);
+          } else {
+            // Token invalide, nettoyer le localStorage
+            logout();
+          }
+        } catch (error) {
+          console.error('Erreur de vérification du token:', error);
+          // Token expiré ou invalide, nettoyer le localStorage
+          logout();
+        }
+      }
+      setLoading(false);
+    };
+
+    checkAuth();
   }, []);
 
   const login = (userData, token) => {
+    // Stocker les données de manière sécurisée
     localStorage.setItem('token', token);
-    localStorage.setItem('role', userData.role);
+    localStorage.setItem('user', JSON.stringify(userData));
     
     setIsAuthenticated(true);
     setUser(userData);
   };
 
   const logout = () => {
+    // Nettoyer toutes les données d'authentification
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     localStorage.removeItem('role');
     localStorage.removeItem('isAuthenticated');
     localStorage.removeItem('userRole');
     localStorage.removeItem('currentPage');
+    
+    // Appeler l'API de logout si possible
+    try {
+      authAPI.logout();
+    } catch (error) {
+      console.error('Erreur lors du logout:', error);
+    }
     
     setIsAuthenticated(false);
     setUser(null);

@@ -1,0 +1,24 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://digitalcraft.fr/sitemap.xml
+
+# Crawl-delay pour éviter de surcharger le serveur
+Crawl-delay: 1
+
+# Bloquer les fichiers sensibles
+Disallow: /admin/
+Disallow: /api/
+Disallow: /_next/
+Disallow: /node_modules/
+Disallow: /*.json$
+Disallow: /*.xml$
+Disallow: /error/
+Disallow: /404/
+
+# Autoriser les ressources importantes
+Allow: /css/
+Allow: /js/
+Allow: /images/
+Allow: /fonts/ 

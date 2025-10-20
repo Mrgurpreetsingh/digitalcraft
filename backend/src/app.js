@@ -20,17 +20,60 @@ const corsOptions = {
   optionsSuccessStatus: 200
 };
 
-// Middleware de sécurité
+// Middleware de sécurité avec CSP adapté pour reCAPTCHA
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      scriptSrc: [
+        "'self'", 
+        "'unsafe-inline'",
+        "https://www.google.com",
+        "https://www.gstatic.com",
+        "https://www.google-analytics.com"
+      ],
+      imgSrc: ["'self'", "data:", "https:", "https://www.google.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      frameSrc: [
+        "'self'",
+        "https://www.google.com",
+        "https://www.gstatic.com"
+      ],
+      connectSrc: [
+        "'self'",
+        "https://www.google.com",
+        "https://www.google-analytics.com"
+      ],
+      frameAncestors: ["'self'"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      manifestSrc: ["'self'"]
     },
   },
+  // Headers de sécurité supplémentaires
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  },
+  noSniff: true,
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  xssFilter: true
 }));
+
+// Headers de sécurité supplémentaires
+app.use((req, res, next) => {
+  // Protection contre le clickjacking
+  res.setHeader('X-Frame-Options', 'DENY');
+  // Protection contre le MIME type sniffing
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  // Protection contre les attaques XSS
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  // Permissions Policy
+  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+  next();
+});
 
 // Middleware CORS
 app.use(cors(corsOptions));

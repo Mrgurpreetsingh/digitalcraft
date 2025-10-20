@@ -1,4 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
+import DOMPurify from 'dompurify';
 
 // Styles inline pour éviter les dépendances externes
 const styles = {
@@ -164,87 +167,23 @@ const styles = {
   }
 };
 
+const ContactSchema = Yup.object().shape({
+  nom: Yup.string()
+    .matches(/^[a-zA-ZÀ-ÿ' -]+$/, 'Nom invalide')
+    .required('Nom requis'),
+  prenom: Yup.string()
+    .matches(/^[a-zA-ZÀ-ÿ' -]+$/, 'Prénom invalide')
+    .required('Prénom requis'),
+  email: Yup.string()
+    .email('Email invalide')
+    .required('Email requis'),
+  telephone: Yup.string(),
+  typeProjet: Yup.string().required('Type de projet requis'),
+  message: Yup.string().min(10, 'Message trop court').required('Message requis'),
+  conditions: Yup.boolean().oneOf([true], 'Vous devez accepter les conditions'),
+});
+
 function ContactPage() {
-  const [formData, setFormData] = useState({
-    nom: '',
-    prenom: '',
-    email: '',
-    telephone: '',
-    typeProjet: '',
-    message: '',
-    conditions: false,
-    recaptcha: false
-  });
-  const [focusedField, setFocusedField] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prevState => ({
-      ...prevState,
-      [name]: type === 'checkbox' ? checked : value
-    }));
-  };
-
-  const handleFocus = (fieldName) => {
-    setFocusedField(fieldName);
-  };
-
-  const handleBlur = () => {
-    setFocusedField(null);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!formData.conditions) {
-      alert("Vous devez accepter les conditions d'utilisation.");
-      return;
-    }
-    if (!formData.recaptcha) {
-      alert("Veuillez confirmer que vous n'êtes pas un robot.");
-      return;
-    }
-    if (!formData.nom || !formData.prenom || !formData.email || !formData.typeProjet || !formData.message) {
-      alert('Veuillez remplir tous les champs obligatoires.');
-      return;
-    }
-    setLoading(true);
-    const payload = {
-      nomVisiteur: formData.nom,
-      prenomVisiteur: formData.prenom,
-      emailVisiteur: formData.email,
-      titre: formData.typeProjet,
-      description: formData.message
-    };
-    try {
-      const res = await fetch('/api/contacts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json();
-      if (data.success) {
-        alert('Votre message a bien été envoyé !');
-        setFormData({
-          nom: '',
-          prenom: '',
-          email: '',
-          telephone: '',
-          typeProjet: '',
-          message: '',
-          conditions: false,
-          recaptcha: false
-        });
-      } else {
-        alert(data.message || 'Erreur lors de l\'envoi du message');
-      }
-    } catch {
-      alert('Erreur réseau');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div style={styles.container}>
       <div style={styles.headerSection}>
@@ -254,159 +193,132 @@ function ContactPage() {
           Discutons de vos besoins et créons ensemble votre solution digitale sur mesure
         </p>
       </div>
-
       <div style={styles.contactContainer}>
         <h2 style={styles.formIntro}>Envoyez-nous un message</h2>
         <p style={styles.formSubtitle}>
           Remplissez ce formulaire et nous vous répondrons dans les plus brefs délais.
         </p>
-
-        <div style={styles.formContainer}>
-          <div style={styles.formRow}>
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>Nom</label>
-              <input
-                type="text"
-                name="nom"
-                placeholder="Votre nom"
-                value={formData.nom}
-                onChange={handleChange}
-                onFocus={() => handleFocus('nom')}
-                onBlur={handleBlur}
-                style={{
-                  ...styles.input,
-                  borderColor: focusedField === 'nom' ? '#1E40AF' : '#ddd'
-                }}
-                required
-              />
-            </div>
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>Prénom</label>
-              <input
-                type="text"
-                name="prenom"
-                placeholder="Votre prénom"
-                value={formData.prenom}
-                onChange={handleChange}
-                onFocus={() => handleFocus('prenom')}
-                onBlur={handleBlur}
-                style={{
-                  ...styles.input,
-                  borderColor: focusedField === 'prenom' ? '#1E40AF' : '#ddd'
-                }}
-                required
-              />
-            </div>
-          </div>
-
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Email *</label>
-            <input
-              type="email"
-              name="email"
-              placeholder="votre@email.com"
-              value={formData.email}
-              onChange={handleChange}
-              onFocus={() => handleFocus('email')}
-              onBlur={handleBlur}
-              style={{
-                ...styles.input,
-                borderColor: focusedField === 'email' ? '#1E40AF' : '#ddd'
-              }}
-              required
-            />
-          </div>
-
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Téléphone</label>
-            <input
-              type="tel"
-              name="telephone"
-              placeholder="+33 1 23 45 67 89"
-              value={formData.telephone}
-              onChange={handleChange}
-              onFocus={() => handleFocus('telephone')}
-              onBlur={handleBlur}
-              style={{
-                ...styles.input,
-                borderColor: focusedField === 'telephone' ? '#1E40AF' : '#ddd'
-              }}
-            />
-          </div>
-
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Type de projet</label>
-            <select
-              name="typeProjet"
-              value={formData.typeProjet}
-              onChange={handleChange}
-              style={styles.select}
-              required
-            >
-              <option value="">Sélectionnez un type</option>
-              <option value="web">Site Web</option>
-              <option value="mobile">Application Mobile</option>
-              <option value="marketing">Marketing Digital</option>
-              <option value="consulting">Consulting</option>
-            </select>
-          </div>
-
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Message *</label>
-            <textarea
-              name="message"
-              placeholder="Décrivez votre projet en détail..."
-              value={formData.message}
-              onChange={handleChange}
-              onFocus={() => handleFocus('message')}
-              onBlur={handleBlur}
-              style={{
-                ...styles.textarea,
-                borderColor: focusedField === 'message' ? '#1E40AF' : '#ddd'
-              }}
-              required
-            />
-          </div>
-
-          <div style={styles.checkboxContainer}>
-            <input
-              type="checkbox"
-              name="conditions"
-              id="conditions"
-              checked={formData.conditions}
-              onChange={handleChange}
-              style={styles.checkbox}
-              required
-            />
-            <label htmlFor="conditions" style={styles.checkboxLabel}>
-              J'accepte les conditions d'utilisation et la politique de confidentialité
-            </label>
-          </div>
-
-          <div style={styles.recaptcha}>
-            <input
-              type="checkbox"
-              name="recaptcha"
-              id="recaptcha"
-              checked={formData.recaptcha}
-              onChange={handleChange}
-              style={styles.recaptchaCheckbox}
-              required
-            />
-            <span style={styles.recaptchaText}>Je ne suis pas un robot (reCAPTCHA)</span>
-          </div>
-
-          <button
-            type="submit"
-            style={styles.submitButton}
-            onMouseEnter={(e) => e.target.style.backgroundColor = styles.submitButtonHover.backgroundColor}
-            onMouseLeave={(e) => e.target.style.backgroundColor = styles.submitButton.backgroundColor}
-            onClick={handleSubmit}
-            disabled={loading}
-          >
-            ✉️ Envoyer le message
-          </button>
-        </div>
+        <Formik
+          initialValues={{
+            nom: '',
+            prenom: '',
+            email: '',
+            telephone: '',
+            typeProjet: '',
+            message: '',
+            conditions: false,
+          }}
+          validationSchema={ContactSchema}
+          onSubmit={async (values, { setSubmitting, resetForm }) => {
+            const payload = {
+              nomVisiteur: values.nom,
+              prenomVisiteur: values.prenom,
+              emailVisiteur: values.email,
+              titre: values.typeProjet,
+              description: DOMPurify.sanitize(values.message)
+            };
+            try {
+              const res = await fetch('/api/contacts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+              });
+              const data = await res.json();
+              if (data.success) {
+                alert('Votre message a bien été envoyé !');
+                resetForm();
+              } else {
+                alert(data.message || 'Erreur lors de l\'envoi du message');
+              }
+            } catch {
+              alert('Erreur réseau');
+            } finally {
+              setSubmitting(false);
+            }
+          }}
+        >
+          {({ isSubmitting, touched, errors }) => (
+            <Form style={styles.formContainer}>
+              <div style={styles.formRow}>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Nom *</label>
+                  <Field
+                    type="text"
+                    name="nom"
+                    placeholder="Votre nom"
+                    style={styles.input}
+                  />
+                  <ErrorMessage name="nom" component="div" style={{ color: 'red', fontSize: 13 }} />
+                </div>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Prénom *</label>
+                  <Field
+                    type="text"
+                    name="prenom"
+                    placeholder="Votre prénom"
+                    style={styles.input}
+                  />
+                  <ErrorMessage name="prenom" component="div" style={{ color: 'red', fontSize: 13 }} />
+                </div>
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Email *</label>
+                <Field
+                  type="email"
+                  name="email"
+                  placeholder="votre@email.com"
+                  style={styles.input}
+                />
+                <ErrorMessage name="email" component="div" style={{ color: 'red', fontSize: 13 }} />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Téléphone</label>
+                <Field
+                  type="tel"
+                  name="telephone"
+                  placeholder="+33 1 23 45 67 89"
+                  style={styles.input}
+                />
+                <ErrorMessage name="telephone" component="div" style={{ color: 'red', fontSize: 13 }} />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Type de projet *</label>
+                <Field as="select" name="typeProjet" style={styles.select}>
+                  <option value="">Sélectionnez un type</option>
+                  <option value="web">Site Web</option>
+                  <option value="mobile">Application Mobile</option>
+                  <option value="marketing">Marketing Digital</option>
+                  <option value="consulting">Consulting</option>
+                </Field>
+                <ErrorMessage name="typeProjet" component="div" style={{ color: 'red', fontSize: 13 }} />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Message *</label>
+                <Field
+                  as="textarea"
+                  name="message"
+                  placeholder="Décrivez votre projet en détail..."
+                  style={styles.textarea}
+                />
+                <ErrorMessage name="message" component="div" style={{ color: 'red', fontSize: 13 }} />
+              </div>
+              <div style={styles.checkboxContainer}>
+                <Field type="checkbox" name="conditions" id="conditions" style={styles.checkbox} />
+                <label htmlFor="conditions" style={styles.checkboxLabel}>
+                  J'accepte les conditions d'utilisation et la politique de confidentialité
+                </label>
+              </div>
+              <ErrorMessage name="conditions" component="div" style={{ color: 'red', fontSize: 13 }} />
+              <button
+                type="submit"
+                style={styles.submitButton}
+                disabled={isSubmitting}
+              >
+                ✉️ Envoyer le message
+              </button>
+            </Form>
+          )}
+        </Formik>
       </div>
     </div>
   );
