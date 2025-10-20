@@ -41,7 +41,7 @@ export const authAPI = {
   // logout: JWT Stateless - pas besoin de route API, géré côté client uniquement
   getProfile: () => api.get('/utilisateurs/profile'),
   updateProfile: (userData) => api.put('/utilisateurs/profile', userData),
-  changePassword: (passwordData) => api.put('/utilisateurs/password', passwordData)
+  changePassword: (passwordData) => api.put('/utilisateurs/change-password', passwordData)
 };
 
 export const projectsAPI = {
