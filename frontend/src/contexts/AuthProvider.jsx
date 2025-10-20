@@ -54,14 +54,10 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('isAuthenticated');
     localStorage.removeItem('userRole');
     localStorage.removeItem('currentPage');
-    
-    // Appeler l'API de logout si possible
-    try {
-      authAPI.logout();
-    } catch (error) {
-      console.error('Erreur lors du logout:', error);
-    }
-    
+
+    // JWT Stateless : pas besoin d'appel API
+    // Le token est simplement supprimé côté client
+
     setIsAuthenticated(false);
     setUser(null);
   };
