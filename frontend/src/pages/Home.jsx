@@ -1,9 +1,12 @@
 import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../styles/Home.css';
 import Avis from '../components/Avis';
 import { applyPageSEO } from '../utils/seo';
 
 function Home() {
+  const navigate = useNavigate();
+
   useEffect(() => {
     // Appliquer le SEO pour la page d'accueil
     applyPageSEO('home');
@@ -20,7 +23,7 @@ function Home() {
             <p className="hero-description">
               Transformez vos idées en solutions digitales performantes avec notre équipe d'experts.
             </p>
-            <button className="cta-button">
+            <button className="cta-button" onClick={() => navigate('/devis')}>
               Demander un devis
             </button>
           </div>
