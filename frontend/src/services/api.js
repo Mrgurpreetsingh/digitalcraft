@@ -38,7 +38,7 @@ api.interceptors.response.use(
 export const authAPI = {
   login: (credentials) => api.post('/utilisateurs/login', credentials),
   register: (userData) => api.post('/utilisateurs/register', userData),
-  logout: () => api.post('/utilisateurs/logout'),
+  // logout: JWT Stateless - pas besoin de route API, géré côté client uniquement
   getProfile: () => api.get('/utilisateurs/profile'),
   updateProfile: (userData) => api.put('/utilisateurs/profile', userData),
   changePassword: (passwordData) => api.put('/utilisateurs/change-password', passwordData)

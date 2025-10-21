@@ -73,8 +73,6 @@ const ConnexionPage = () => {
         token: values.recaptcha,
       };
 
-      console.log('Tentative de connexion avec:', { email: sanitizedEmail, token: values.recaptcha ? 'présent' : 'absent' });
-
       const res = await authAPI.login(payload);
       const data = res.data;
 

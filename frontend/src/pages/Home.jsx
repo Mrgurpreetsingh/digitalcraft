@@ -8,7 +8,6 @@ import { applyPageSEO } from '../utils/seo';
 function Home() {
   const navigate = useNavigate();
 
-
   useEffect(() => {
     // Appliquer le SEO pour la page d'accueil
     applyPageSEO('home');

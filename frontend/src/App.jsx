@@ -8,6 +8,7 @@ import InscriptionPage from './pages/Inscription.jsx';
 import ConnexionPage from './pages/Connexion.jsx';
 import DevisPage from './pages/Devis.jsx';
 import Profil from './pages/Profil.jsx';
+import ProfilEmploye from './pages/ProfilEmploye.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';
 import EmployeeDashboard from './pages/EmployeeDashboard.jsx';
 import ProfilEmploye from './pages/ProfilEmploye.jsx';
@@ -56,6 +57,22 @@ function App() {
             }
           />
                     <Route
+            path="/profil-employe"
+            element={
+              <ProtectedRoute allowedRoles={['Employé', 'Administrateur']}>
+                <ProfilEmploye />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profil-employe"
+            element={
+              <ProtectedRoute allowedRoles={['Employé', 'Administrateur']}>
+                <ProfilEmploye />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/profil-employe"
             element={
               <ProtectedRoute allowedRoles={['Employé', 'Administrateur']}>

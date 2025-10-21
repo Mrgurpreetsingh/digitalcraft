@@ -193,7 +193,7 @@ class UtilisateurController {
         console.log('❌ JWT_SECRET non configuré');
         return res.status(500).json({ success: false, message: 'Configuration serveur incorrecte' });
       }
-      const token = jwt.sign({ id: user.idUtilisateur, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRE || '24h' });
+      const token = jwt.sign({ id: user.idUtilisateur, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '24h' });
       console.log('✅ Connexion réussie');
       console.log('=== FIN LOGIN ===');
       res.json({
