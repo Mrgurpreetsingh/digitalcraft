@@ -1,40 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Mail, FileText, Send } from 'lucide-react';
+import '../styles/Devis.css';
 
-const styles = {
-  container: { minHeight: '100vh', display: 'flex', backgroundColor: '#f3f4f6' },
-  leftSide: { flex: 1, backgroundColor: '#1e40af', color: '#ffffff', padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '100vh' },
-  rightSide: { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem', backgroundColor: '#e5e7eb', minHeight: '100vh' },
-  formContainer: { backgroundColor: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)', padding: '2rem', width: '100%', maxWidth: '28rem' },
-  title: { fontSize: '2rem', fontWeight: 'bold', marginBottom: '1.5rem', color: '#ffffff' },
-  subtitle: { fontSize: '1.25rem', color: '#93c5fd', marginBottom: '2rem' },
-  description: { fontSize: '1rem', color: '#dbeafe', marginBottom: '2rem', lineHeight: '1.6' },
-  stepsTitle: { fontSize: '1.125rem', fontWeight: '600', marginBottom: '1rem', color: '#ffffff' },
-  stepsList: { marginBottom: '1rem' },
-  stepItem: { display: 'flex', alignItems: 'flex-start', gap: '0.75rem', marginBottom: '0.75rem' },
-  stepNumber: { backgroundColor: '#10b981', borderRadius: '50%', width: '2rem', height: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff', fontWeight: 'bold', fontSize: '0.875rem' },
-  stepText: { color: '#dbeafe', fontSize: '0.875rem' },
-  formHeader: { textAlign: 'center', marginBottom: '2rem' },
-  iconContainer: { backgroundColor: '#2563eb', borderRadius: '0.5rem', width: '4rem', height: '4rem', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem auto' },
-  formTitle: { fontSize: '1.5rem', fontWeight: 'bold', color: '#374151', marginBottom: '0.5rem' },
-  formSubtitle: { fontSize: '1rem', color: '#6b7280' },
-  fieldContainer: { marginBottom: '1rem' },
-  label: { display: 'block', color: '#374151', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.5rem' },
-  required: { color: '#ef4444' },
-  inputContainer: { position: 'relative' },
-  input: { width: '100%', padding: '0.75rem 1rem', paddingLeft: '3rem', border: '1px solid #d1d5db', borderRadius: '0.375rem', fontSize: '0.875rem', boxSizing: 'border-box' },
-  inputFocus: { outline: 'none', boxShadow: '0 0 0 2px #2563eb', borderColor: 'transparent' },
-  inputIcon: { position: 'absolute', left: '0.75rem', top: '0.75rem', height: '1.25rem', width: '1.25rem', color: '#6b7280' },
-  select: { width: '100%', padding: '0.75rem 1rem', border: '1px solid #d1d5db', borderRadius: '0.375rem', fontSize: '0.875rem', appearance: 'none', background: '#ffffff' },
-  textarea: { width: '100%', padding: '0.75rem 1rem', border: '1px solid #d1d5db', borderRadius: '0.375rem', fontSize: '0.875rem', resize: 'vertical' },
-  checkboxContainer: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' },
-  checkboxGroup: { display: 'flex', alignItems: 'center', gap: '0.5rem' },
-  checkbox: { height: '1rem', width: '1rem', color: '#2563eb' },
-  checkboxLabel: { fontSize: '0.875rem', color: '#374151' },
-  button: { width: '100%', backgroundColor: '#2563eb', color: '#ffffff', padding: '0.75rem 1.5rem', borderRadius: '0.375rem', border: 'none', fontSize: '1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'background-color 200ms' },
-  buttonHover: { backgroundColor: '#1d4ed8' },
-  footerNote: { marginTop: '1rem', textAlign: 'center', fontSize: '0.75rem', color: '#6b7280', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem' }
-};
 
 const DevisPage = () => {
   const [formData, setFormData] = useState({
@@ -50,6 +17,7 @@ const DevisPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+
   // Menu budget plus réaliste
   const budgetOptions = [
     { value: '0-1000', label: '0€ - 1 000€' },
@@ -58,6 +26,7 @@ const DevisPage = () => {
     { value: '6000-10000', label: '6 000€ - 10 000€' },
     { value: '10000+', label: '10 000€ et plus' }
   ];
+
 
   useEffect(() => {
     setLoading(true);
@@ -78,6 +47,7 @@ const DevisPage = () => {
       .finally(() => setLoading(false));
   }, []);
 
+
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
@@ -85,6 +55,7 @@ const DevisPage = () => {
       [name]: type === 'checkbox' ? checked : value
     }));
   };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -137,106 +108,108 @@ const DevisPage = () => {
     }
   };
 
+
   const processSteps = [
     "Analyse de votre demande",
     "Proposition personnalisée",
     "Réponse sous 24h"
   ];
 
+
   return (
-    <div style={styles.container}>
-      <div style={styles.leftSide}>
-        <h1 style={styles.title}>Demander un Devis</h1>
-        <p style={styles.subtitle}>Personnalisez votre projet avec nous</p>
-        <p style={styles.description}>
-          Décrivez-nous votre projet et obtenez un devis personnalisé adapté à 
+    <div className="devis-container">
+      <div className="devis-left-side">
+        <h1 className="devis-title">Demander un Devis</h1>
+        <p className="devis-subtitle">Personnalisez votre projet avec nous</p>
+        <p className="devis-description">
+          Décrivez-nous votre projet et obtenez un devis personnalisé adapté à
           vos besoins et votre budget.
         </p>
         <div>
-          <h3 style={styles.stepsTitle}>Notre processus :</h3>
-          <div style={styles.stepsList}>
+          <h3 className="devis-steps-title">Notre processus :</h3>
+          <div className="devis-steps-list">
             {processSteps.map((step, index) => (
-              <div key={index} style={styles.stepItem}>
-                <div style={styles.stepNumber}>{index + 1}</div>
-                <div style={styles.stepText}>{step}</div>
+              <div key={index} className="devis-step-item">
+                <div className="devis-step-number">{index + 1}</div>
+                <div className="devis-step-text">{step}</div>
               </div>
             ))}
           </div>
         </div>
       </div>
-      <div style={styles.rightSide}>
-        <div style={styles.formContainer}>
-          <div style={styles.formHeader}>
-            <div style={styles.iconContainer}>
+      <div className="devis-right-side">
+        <div className="devis-form-container">
+          <div className="devis-form-header">
+            <div className="devis-icon-container">
               <FileText style={{ height: '2rem', width: '2rem', color: '#ffffff' }} />
             </div>
-            <h2 style={styles.formTitle}>Votre Projet</h2>
-            <p style={styles.formSubtitle}>Remplissez le formulaire pour recevoir votre devis</p>
+            <h2 className="devis-form-title">Votre Projet</h2>
+            <p className="devis-form-subtitle">Remplissez le formulaire pour recevoir votre devis</p>
           </div>
           <div>
-            {error && <p style={{ color: '#ef4444' }}>{error}</p>}
-            {loading && <p style={{ color: '#6b7280' }}>Chargement des services...</p>}
-            <div style={styles.fieldContainer}>
-              <label style={styles.label}>
-                Prénom <span style={styles.required}>*</span>
+            {error && <p className="devis-error">{error}</p>}
+            {loading && <p className="devis-loading">Chargement des services...</p>}
+            <div className="devis-field-container">
+              <label className="devis-label">
+                Prénom <span className="devis-required">*</span>
               </label>
-              <div style={styles.inputContainer}>
-                <User style={styles.inputIcon} />
+              <div className="devis-input-container">
+                <User className="devis-input-icon" />
                 <input
                   type="text"
                   name="prenom"
                   value={formData.prenom}
                   onChange={handleInputChange}
                   placeholder="Votre prénom"
-                  style={styles.input}
+                  className="devis-input"
                   required
                 />
               </div>
             </div>
-            <div style={styles.fieldContainer}>
-              <label style={styles.label}>
-                Nom <span style={styles.required}>*</span>
+            <div className="devis-field-container">
+              <label className="devis-label">
+                Nom <span className="devis-required">*</span>
               </label>
-              <div style={styles.inputContainer}>
-                <User style={styles.inputIcon} />
+              <div className="devis-input-container">
+                <User className="devis-input-icon" />
                 <input
                   type="text"
                   name="nom"
                   value={formData.nom}
                   onChange={handleInputChange}
                   placeholder="Votre nom"
-                  style={styles.input}
+                  className="devis-input"
                   required
                 />
               </div>
             </div>
-            <div style={styles.fieldContainer}>
-              <label style={styles.label}>
-                Email <span style={styles.required}>*</span>
+            <div className="devis-field-container">
+              <label className="devis-label">
+                Email <span className="devis-required">*</span>
               </label>
-              <div style={styles.inputContainer}>
-                <Mail style={styles.inputIcon} />
+              <div className="devis-input-container">
+                <Mail className="devis-input-icon" />
                 <input
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
                   placeholder="votre@email.com"
-                  style={styles.input}
+                  className="devis-input"
                   required
                 />
               </div>
             </div>
-            <div style={styles.fieldContainer}>
-              <label style={styles.label}>
-                Type de service <span style={styles.required}>*</span>
+            <div className="devis-field-container">
+              <label className="devis-label">
+                Type de service <span className="devis-required">*</span>
               </label>
-              <div style={styles.inputContainer}>
+              <div className="devis-input-container">
                 <select
                   name="typeServiceId"
                   value={formData.typeServiceId}
                   onChange={handleInputChange}
-                  style={styles.select}
+                  className="devis-select"
                   required
                 >
                   <option value="">Sélectionnez un service</option>
@@ -248,16 +221,16 @@ const DevisPage = () => {
                 </select>
               </div>
             </div>
-            <div style={styles.fieldContainer}>
-              <label style={styles.label}>
-                Budget estimé <span style={styles.required}>*</span>
+            <div className="devis-field-container">
+              <label className="devis-label">
+                Budget estimé <span className="devis-required">*</span>
               </label>
-              <div style={styles.inputContainer}>
+              <div className="devis-input-container">
                 <select
                   name="budgetEstime"
                   value={formData.budgetEstime}
                   onChange={handleInputChange}
-                  style={styles.select}
+                  className="devis-select"
                   required
                 >
                   <option value="">Sélectionnez un budget</option>
@@ -269,46 +242,44 @@ const DevisPage = () => {
                 </select>
               </div>
             </div>
-            <div style={styles.fieldContainer}>
-              <label style={styles.label}>
-                Description du projet <span style={styles.required}>*</span>
+            <div className="devis-field-container">
+              <label className="devis-label">
+                Description du projet <span className="devis-required">*</span>
               </label>
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleInputChange}
                 placeholder="Décrivez votre projet, vos objectifs et vos besoins spécifiques..."
-                style={styles.textarea}
+                className="devis-textarea"
                 required
               />
             </div>
-            <div style={styles.fieldContainer}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div className="devis-field-container">
+              <div className="devis-checkbox-container">
                 <input
                   type="checkbox"
                   name="rgpd"
                   checked={formData.rgpd}
                   onChange={handleInputChange}
-                  style={styles.checkbox}
+                  className="devis-checkbox"
                   required
                 />
-                <label style={styles.checkboxLabel}>
-                  J’accepte que mes données soient utilisées pour traiter ma demande, conformément à la <a href="/politique-confidentialite" target="_blank" rel="noopener noreferrer">politique de confidentialité</a> et à la réglementation sur la protection des données personnelles (RGPD).
+                <label className="devis-checkbox-label">
+                  J'accepte que mes données soient utilisées pour traiter ma demande, conformément à la <a href="/politique-confidentialite" target="_blank" rel="noopener noreferrer">politique de confidentialité</a> et à la réglementation sur la protection des données personnelles (RGPD).
                 </label>
               </div>
             </div>
             <button
               type="submit"
-              style={styles.button}
+              className="devis-button"
               onClick={handleSubmit}
-              onMouseEnter={(e) => e.target.style.backgroundColor = styles.buttonHover.backgroundColor}
-              onMouseLeave={(e) => e.target.style.backgroundColor = styles.button.backgroundColor}
               disabled={loading}
             >
               <Send size={20} />
               <span>{loading ? 'Envoi...' : 'Soumettre ma demande'}</span>
             </button>
-            <div style={styles.footerNote}>
+            <div className="devis-footer-note">
               <span>🔒</span>
               <span>Vos informations sont sécurisées et confidentielles</span>
             </div>
@@ -319,4 +290,9 @@ const DevisPage = () => {
   );
 };
 
+
 export default DevisPage;
+
+
+
+
