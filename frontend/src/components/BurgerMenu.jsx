@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, ChevronDown, LogOut, Settings, BarChart3 } from 'lucide-react';
 import '../styles/BurgerMenu.css';
+
 
 function BurgerMenu({
   currentPage,
@@ -16,13 +17,32 @@ function BurgerMenu({
 }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+
+  // Bloquer le scroll du body quand le menu est ouvert
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.classList.add('menu-open');
+    } else {
+      document.body.classList.remove('menu-open');
+    }
+
+
+    // Cleanup au démontage du composant
+    return () => {
+      document.body.classList.remove('menu-open');
+    };
+  }, [isMenuOpen]);
+
+
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
+
   const closeMenu = () => {
     setIsMenuOpen(false);
   };
+
 
   return (
     <>
@@ -36,6 +56,7 @@ function BurgerMenu({
         <span className="burger-line"></span>
         <span className="burger-line"></span>
       </button>
+
 
       {/* Navigation Menu */}
       <ul className={`nav-menu ${isMenuOpen ? 'active' : ''}`}>
@@ -88,6 +109,7 @@ function BurgerMenu({
           </a>
         </li>
 
+
         {/* Section Mobile pour utilisateur connecté */}
         {isAuthenticated && (
           <>
@@ -139,6 +161,7 @@ function BurgerMenu({
           </>
         )}
 
+
         {/* Menu utilisateur - Desktop uniquement */}
         {!isAuthenticated ? (
           <li className="nav-item">
@@ -163,6 +186,7 @@ function BurgerMenu({
               <User size={20} />
               <ChevronDown size={16} className={`chevron ${isUserMenuOpen ? 'rotate' : ''}`} />
             </button>
+
 
             {isUserMenuOpen && (
               <div className="user-dropdown">
@@ -221,4 +245,9 @@ function BurgerMenu({
   );
 }
 
+
 export default BurgerMenu;
+
+
+
+

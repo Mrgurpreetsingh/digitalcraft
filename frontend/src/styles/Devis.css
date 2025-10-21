@@ -1,0 +1,503 @@
+/* Devis Page Styles */
+
+
+/* Container principal */
+.devis-container {
+  min-height: 100vh;
+  display: flex;
+  background-color: #f3f4f6;
+}
+
+
+/* Côté gauche - Informations */
+.devis-left-side {
+  flex: 1;
+  background-color: #1e40af;
+  color: #ffffff;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+
+/* Côté droit - Formulaire */
+.devis-right-side {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background-color: #e5e7eb;
+  min-height: 100vh;
+}
+
+
+/* Container du formulaire */
+.devis-form-container {
+  background-color: #ffffff;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  padding: 2rem;
+  width: 100%;
+  max-width: 28rem;
+}
+
+
+/* Titre */
+.devis-title {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+  color: #ffffff;
+}
+
+
+.devis-subtitle {
+  font-size: 1.25rem;
+  color: #93c5fd;
+  margin-bottom: 2rem;
+}
+
+
+.devis-description {
+  font-size: 1rem;
+  color: #dbeafe;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+
+/* Processus */
+.devis-steps-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #ffffff;
+}
+
+
+.devis-steps-list {
+  margin-bottom: 1rem;
+}
+
+
+.devis-step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+
+.devis-step-number {
+  background-color: #10b981;
+  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-weight: bold;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+
+.devis-step-text {
+  color: #dbeafe;
+  font-size: 0.875rem;
+}
+
+
+/* Header du formulaire */
+.devis-form-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+
+.devis-icon-container {
+  background-color: #2563eb;
+  border-radius: 0.5rem;
+  width: 4rem;
+  height: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem auto;
+}
+
+
+.devis-form-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+
+.devis-form-subtitle {
+  font-size: 1rem;
+  color: #6b7280;
+}
+
+
+/* Champs du formulaire */
+.devis-field-container {
+  margin-bottom: 1rem;
+}
+
+
+.devis-label {
+  display: block;
+  color: #374151;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+
+.devis-required {
+  color: #ef4444;
+}
+
+
+.devis-input-container {
+  position: relative;
+}
+
+
+.devis-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  padding-left: 3rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  box-sizing: border-box;
+  transition: all 0.2s;
+}
+
+
+.devis-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #2563eb;
+  border-color: transparent;
+}
+
+
+.devis-input-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 0.75rem;
+  height: 1.25rem;
+  width: 1.25rem;
+  color: #6b7280;
+  pointer-events: none;
+}
+
+
+.devis-select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  appearance: none;
+  background: #ffffff url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") no-repeat right 0.5rem center/1.5em 1.5em;
+  box-sizing: border-box;
+}
+
+
+.devis-select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #2563eb;
+  border-color: transparent;
+}
+
+
+.devis-textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  resize: vertical;
+  min-height: 100px;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+
+.devis-textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #2563eb;
+  border-color: transparent;
+}
+
+
+/* Checkbox */
+.devis-checkbox-container {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+
+.devis-checkbox {
+  height: 1rem;
+  width: 1rem;
+  color: #2563eb;
+  margin-top: 0.25rem;
+  flex-shrink: 0;
+}
+
+
+.devis-checkbox-label {
+  font-size: 0.875rem;
+  color: #374151;
+  line-height: 1.4;
+}
+
+
+.devis-checkbox-label a {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+
+/* Bouton */
+.devis-button {
+  width: 100%;
+  background-color: #2563eb;
+  color: #ffffff;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.375rem;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: background-color 200ms;
+  font-weight: 500;
+}
+
+
+.devis-button:hover {
+  background-color: #1d4ed8;
+}
+
+
+.devis-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+
+/* Note de pied */
+.devis-footer-note {
+  margin-top: 1rem;
+  text-align: center;
+  font-size: 0.75rem;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+
+/* Messages d'erreur et de chargement */
+.devis-error {
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+
+.devis-loading {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+
+/* RESPONSIVE - PETIT ÉCRAN */
+@media (max-width: 768px) {
+  /* Container en colonne */
+  .devis-container {
+    flex-direction: column;
+    background-color: #ffffff;
+  }
+
+
+  /* Left side devient un header */
+  .devis-left-side {
+    min-height: auto;
+    padding: 2rem 1.5rem;
+    text-align: center;
+  }
+
+
+  .devis-title {
+    font-size: 1.75rem;
+    margin-bottom: 1rem;
+  }
+
+
+  .devis-subtitle {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+  }
+
+
+  .devis-description {
+    font-size: 0.875rem;
+    margin-bottom: 1.5rem;
+  }
+
+
+  .devis-steps-title {
+    font-size: 1rem;
+    text-align: left;
+  }
+
+
+  .devis-steps-list {
+    text-align: left;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+
+  .devis-step-item {
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+
+  .devis-step-number {
+    width: 1.75rem;
+    height: 1.75rem;
+    font-size: 0.75rem;
+  }
+
+
+  .devis-step-text {
+    font-size: 0.8rem;
+  }
+
+
+  /* Right side - formulaire pleine largeur */
+  .devis-right-side {
+    min-height: auto;
+    padding: 1.5rem 1rem;
+    background-color: #ffffff;
+  }
+
+
+  .devis-form-container {
+    max-width: 100%;
+    padding: 1.5rem;
+    box-shadow: none;
+  }
+
+
+  .devis-icon-container {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+
+
+  .devis-form-title {
+    font-size: 1.25rem;
+  }
+
+
+  .devis-form-subtitle {
+    font-size: 0.875rem;
+  }
+
+
+  /* Champs du formulaire plus compacts */
+  .devis-input,
+  .devis-select {
+    padding: 0.625rem 0.875rem;
+    padding-left: 2.75rem;
+    font-size: 0.875rem;
+  }
+
+
+  .devis-select {
+    padding-left: 0.875rem;
+  }
+
+
+  .devis-input-icon {
+    left: 0.625rem;
+    top: 0.625rem;
+    height: 1rem;
+    width: 1rem;
+  }
+
+
+  .devis-textarea {
+    padding: 0.625rem 0.875rem;
+    font-size: 0.875rem;
+    min-height: 80px;
+  }
+
+
+  .devis-button {
+    padding: 0.875rem 1.25rem;
+    font-size: 0.9375rem;
+  }
+
+
+  .devis-footer-note {
+    font-size: 0.7rem;
+  }
+}
+
+
+/* RESPONSIVE - TRÈS PETIT ÉCRAN */
+@media (max-width: 480px) {
+  .devis-left-side {
+    padding: 1.5rem 1rem;
+  }
+
+
+  .devis-title {
+    font-size: 1.5rem;
+  }
+
+
+  .devis-subtitle {
+    font-size: 0.9375rem;
+  }
+
+
+  .devis-description {
+    font-size: 0.8125rem;
+  }
+
+
+  .devis-right-side {
+    padding: 1rem 0.75rem;
+  }
+
+
+  .devis-form-container {
+    padding: 1.25rem;
+  }
+}
+
+
+
+
