@@ -2,14 +2,14 @@ import React from 'react';
 import './ServiceHero.css';
 import Button from './Button';
 
-function ServiceHero({ title, subtitle, description, buttonText }) {
+function ServiceHero({ title, subtitle, description, buttonText, onClick }) {
   return (
     <section className="service-hero">
       <div className="hero-content">
         <h1>{title}</h1>
         {subtitle && <p className="hero-subtitle">{subtitle}</p>}
         {description && <p className="hero-description">{description}</p>}
-        <Button>{buttonText}</Button>
+        <Button onClick={onClick}>{buttonText}</Button>
       </div>
     </section>
   );

@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../styles/Services.css';
 import Button from '../components/Button';
 import ServicesGrid from '../components/ServicesGrid';
 import ServiceHero from '../components/ServiceHero';
 
 function Services() {
+  const navigate = useNavigate();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -26,6 +28,7 @@ function Services() {
         subtitle="Découvrez nos expertises en création digitale"
         description="Des solutions sur mesure pour propulser votre entreprise dans l'ère numérique"
         buttonText="Contacter un expert"
+        onClick={() => navigate('/contact')}
       />
       <section className="services-content">
         <div className="services-header">
