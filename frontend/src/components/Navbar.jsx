@@ -144,7 +144,7 @@ function Navbar() {
           {isAuthenticated && (
             <>
               <li className="nav-item mobile-only">
-                <button 
+                <button
                   className="nav-link dashboard-link"
                   onClick={handleDashboardClick}
                 >
@@ -162,7 +162,16 @@ function Navbar() {
                 </button>
               </li>
               <li className="nav-item mobile-only">
-                <button 
+                <button
+                  className="nav-link"
+                  onClick={() => handleNavClick('Mon Profil', '/profil-employe')}
+                >
+                  <User size={18} />
+                  Mon Profil
+                </button>
+              </li>
+              <li className="nav-item mobile-only">
+                <button
                   className="nav-link logout-mobile"
                   onClick={handleLogout}
                 >
@@ -218,6 +227,16 @@ function Navbar() {
                         Employee Dashboard
                       </>
                     )}
+                  </button>
+                  <button
+                    className="dropdown-item"
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      handleNavClick('Mon Profil', '/profil-employe');
+                    }}
+                  >
+                    <User size={16} />
+                    Mon Profil
                   </button>
                   <hr className="dropdown-divider" />
                   <button

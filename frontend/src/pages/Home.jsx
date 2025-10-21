@@ -1,13 +1,19 @@
 import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../styles/Home.css';
 import Avis from '../components/Avis';
 import { applyPageSEO } from '../utils/seo';
 
+
 function Home() {
+  const navigate = useNavigate();
+
+
   useEffect(() => {
     // Appliquer le SEO pour la page d'accueil
     applyPageSEO('home');
   }, []);
+
 
   return (
     <main id="main-content">
@@ -20,14 +26,14 @@ function Home() {
             <p className="hero-description">
               Transformez vos idées en solutions digitales performantes avec notre équipe d'experts.
             </p>
-            <button className="cta-button">
+            <button className="cta-button" onClick={() => navigate('/devis')}>
               Demander un devis
             </button>
           </div>
           <div className="home-image">
-            <img 
-              src="/img/banniere-hero-page-accueil.png" 
-              alt="Illustration de développement web et création digitale" 
+            <img
+              src="/img/banniere-hero-page-accueil.png"
+              alt="Illustration de développement web et création digitale"
               loading="eager"
               width="600"
               height="400"
@@ -35,6 +41,7 @@ function Home() {
           </div>
         </div>
       </section>
+
 
       {/* Section Services */}
       <section className="services">
@@ -44,7 +51,7 @@ function Home() {
             Des solutions complètes pour développer votre présence digitale et faire croître votre entreprise.
           </p>
         </header>
-        
+       
         <div className="services-grid">
           <article className="service-card">
             <div className="service-icon">🌐</div>
@@ -55,7 +62,7 @@ function Home() {
               <li>Performance optimale</li>
             </ul>
           </article>
-          
+         
           <article className="service-card">
             <div className="service-icon">📱</div>
             <h3>Applications Mobiles</h3>
@@ -65,7 +72,7 @@ function Home() {
               <li>Maintenance incluse</li>
             </ul>
           </article>
-          
+         
           <article className="service-card">
             <div className="service-icon">📈</div>
             <h3>Marketing Digital</h3>
@@ -78,6 +85,7 @@ function Home() {
         </div>
       </section>
 
+
       {/* Section Témoignages */}
       <section>
         <Avis />
@@ -85,5 +93,6 @@ function Home() {
     </main>
   );
 }
+
 
 export default Home;

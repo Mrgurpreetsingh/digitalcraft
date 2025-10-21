@@ -10,6 +10,7 @@ import DevisPage from './pages/Devis.jsx';
 import Profil from './pages/Profil.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';
 import EmployeeDashboard from './pages/EmployeeDashboard.jsx';
+import ProfilEmploye from './pages/ProfilEmploye.jsx';
 import Portfolio from './pages/Portfolio.jsx';
 import PolitiqueConfidentialite from './pages/PolitiqueConfidentialite.jsx';
 import MentionsLegales from './pages/MentionsLegales.jsx';
@@ -51,6 +52,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['Employé']}>
                 <EmployeeDashboard />
+              </ProtectedRoute>
+            }
+          />
+                    <Route
+            path="/profil-employe"
+            element={
+              <ProtectedRoute allowedRoles={['Employé', 'Administrateur']}>
+                <ProfilEmploye />
               </ProtectedRoute>
             }
           />
