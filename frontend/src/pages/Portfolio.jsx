@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef} from 'react';
 import '../styles/Portfolio.css';
 import ProjectGrid from '../components/PortfolioGrid';
 import axios from 'axios';
@@ -10,6 +10,9 @@ const Portfolio = () => {
   const [selectedService, setSelectedService] = useState('Tous');
   const [selectedProject, setSelectedProject] = useState(null);
   const [avisList, setAvisList] = useState([]);
+
+  /*Référencee vers la section des projets pour scroll*/
+  const projectsSectionRef = useRef(null);
 
   useEffect(() => {
     axios.get('http://localhost:5000/api/projets?statut=Publié')
@@ -44,6 +47,10 @@ const Portfolio = () => {
   const avisForProject = selectedProject
     ? avisList.find(a => a.projectId === selectedProject.idProjet && a.status === 'approved')
     : null;
+   // Fonction pour scroller jusqu’à la section
+  const scrollToProjects = () => {
+    projectsSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   return (
     <div className="portfolio-container">
@@ -55,7 +62,8 @@ const Portfolio = () => {
           <p className="hero-description">
             Une sélection de nos meilleures créations digitales qui ont transformé nos clients
           </p>
-          <button className="cta-button">
+          {/* bouton qui déclenche le scroll */}
+          <button className="cta-button" onClick={scrollToProjects}>
             <span className="button-icon">👁️</span>
             Voir tous les projets
           </button>
@@ -67,8 +75,8 @@ const Portfolio = () => {
         </div>
       </section>
 
-      {/* Section grille de projets */}
-      <section className="portfolio-projects">
+      {/* Section grille de projets avec cible ref du scroll */}
+      <section className="portfolio-projects" ref={projectsSectionRef}>
         <div className="projects-header">
           <h2>Nos Projets Réalisés</h2>
           <p>Chaque projet raconte une histoire de réussite digitale</p>
