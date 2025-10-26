@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import ModalDevis from '../components/ModalDevis';
 import '../styles/EmployeeDashboard.css';
+
 
 const EmployeeDashboard = () => {
   const [activeTab, setActiveTab] = useState('projets');
@@ -10,6 +12,9 @@ const EmployeeDashboard = () => {
   const [quotes, setQuotes] = useState([]);
   const [quotesLoading, setQuotesLoading] = useState(true);
   const [quotesError, setQuotesError] = useState(null);
+  const [showQuoteModal, setShowQuoteModal] = useState(false);
+  const [selectedQuote, setSelectedQuote] = useState(null);
+
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -27,6 +32,7 @@ const EmployeeDashboard = () => {
     };
     fetchProjects();
   }, []);
+
 
   useEffect(() => {
     if (activeTab === 'devis') {
@@ -49,30 +55,77 @@ const EmployeeDashboard = () => {
     }
   }, [activeTab]);
 
-  const handleStatusChange = (projectId, newStatus) => {
-    setProjects(projects.map(project =>
-      project.idProjet === projectId
-        ? { ...project, statut: newStatus }
-        : project
-    ));
-    // TODO: Appel API pour mettre à jour le statut côté backend
+
+  const handleStatusChange = async (projectId, newStatus) => {
+    try {
+      const token = localStorage.getItem('token');
+
+
+      // Récupérer le projet complet
+      const project = projects.find(p => p.idProjet === projectId);
+      if (!project) return;
+
+
+      // Mettre à jour le projet avec le nouveau statut
+      await axios.put(`http://localhost:5000/api/projets/${projectId}`, {
+        titre: project.titre,
+        description: project.description,
+        images: project.images,
+        statut: newStatus,
+        typeServiceId: project.typeServiceId,
+        clientId: project.clientId,
+        employeId: project.employeId
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+
+      // Mettre à jour l'état local
+      setProjects(projects.map(p =>
+        p.idProjet === projectId
+          ? { ...p, statut: newStatus }
+          : p
+      ));
+
+
+      alert('Statut mis à jour avec succès !');
+    } catch (err) {
+      console.error('Erreur lors de la mise à jour du statut:', err);
+      alert('Erreur lors de la mise à jour du statut');
+    }
   };
+
 
   const handleModify = (projectId) => {
     // TODO: Logique de modification à implémenter
   };
 
+
   const handleUpdate = (projectId) => {
     // TODO: Logique de mise à jour à implémenter
   };
+
 
   const handleAddProject = () => {
     // Désactivé pour l'employé
   };
 
-  const handleRespondQuote = () => {
-    // TODO: Logique de réponse aux devis à implémenter
+
+  const handleRespondQuote = (quote) => {
+    setSelectedQuote(quote);
+    setShowQuoteModal(true);
   };
+
+
+  const handleQuoteStatusChange = (quoteId, newStatus) => {
+    // Mettre à jour l'état local
+    setQuotes(quotes.map(q =>
+      q.idDevis === quoteId
+        ? { ...q, statut: newStatus }
+        : q
+    ));
+  };
+
 
   return (
     <div className="employee-dashboard">
@@ -84,9 +137,9 @@ const EmployeeDashboard = () => {
             <span className="btn-icon">+</span>
             Ajouter un Projet
           </button>
-          <button className="btn-secondary" onClick={handleRespondQuote}>
+          <button className="btn-secondary" onClick={() => setActiveTab('devis')}>
             <span className="btn-icon">💬</span>
-            Répondre à un Devis
+            Voir les Devis
           </button>
         </div>
       </div>
@@ -161,13 +214,26 @@ const EmployeeDashboard = () => {
                     <div className="header-cell">Demandeur</div>
                     <div className="header-cell">Service</div>
                     <div className="header-cell">Statut</div>
+                    <div className="header-cell">Actions</div>
                   </div>
                   {quotes.map(quote => (
                     <div key={quote.idDevis} className="table-row">
                       <div className="cell">{quote.numeroDevis}</div>
                       <div className="cell">{quote.nomDemandeur} {quote.prenomDemandeur}</div>
                       <div className="cell">{quote.serviceNom}</div>
-                      <div className="cell">{quote.statut}</div>
+                      <div className="cell">
+                        <span className={`status-badge status-${quote.statut.toLowerCase().replace(' ', '-')}`}>
+                          {quote.statut}
+                        </span>
+                      </div>
+                      <div className="cell actions-cell">
+                        <button
+                          className="action-btn modify-btn"
+                          onClick={() => handleRespondQuote(quote)}
+                        >
+                          💬 Répondre
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -182,8 +248,21 @@ const EmployeeDashboard = () => {
           )}
         </div>
       </div>
+
+
+      {/* Modal de réponse aux devis */}
+      {showQuoteModal && selectedQuote && (
+        <ModalDevis
+          devis={selectedQuote}
+          onClose={() => setShowQuoteModal(false)}
+          onStatusChange={handleQuoteStatusChange}
+        />
+      )}
     </div>
   );
 };
 
+
 export default EmployeeDashboard;
+
+

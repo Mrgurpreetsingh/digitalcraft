@@ -1,5 +1,6 @@
 /* EmployeeDashboard.css */
 
+
 .employee-dashboard {
   max-width: 1200px;
   margin: 0 auto;
@@ -8,6 +9,7 @@
   background-color: #f8f9fa;
   min-height: 100vh;
 }
+
 
 .dashboard-header {
   text-align: center;
@@ -18,6 +20,7 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
+
 .dashboard-header h1 {
   font-size: 2.3rem;
   color: #2563eb;
@@ -25,11 +28,13 @@
   font-weight: 700;
 }
 
+
 .dashboard-subtitle {
   color: #6c757d;
   font-size: 1.1rem;
   margin-bottom: 30px;
 }
+
 
 .action-buttons {
   display: flex;
@@ -37,6 +42,7 @@
   gap: 15px;
   flex-wrap: wrap;
 }
+
 
 .btn-primary,
 .btn-secondary {
@@ -53,6 +59,7 @@
   text-decoration: none;
 }
 
+
 .btn-primary {
   background-color: #2563eb;
   color: white;
@@ -67,6 +74,7 @@
   transform: translateY(-2px);
 }
 
+
 .btn-secondary {
   background-color: #17a2b8;
   color: white;
@@ -76,9 +84,11 @@
   transform: translateY(-2px);
 }
 
+
 .btn-icon {
   font-size: 1.2rem;
 }
+
 
 .dashboard-content {
   background: white;
@@ -87,14 +97,17 @@
   overflow: hidden;
 }
 
+
 .tabs-container {
   border-bottom: 1px solid #e9ecef;
 }
+
 
 .tabs {
   display: flex;
   background-color: #f8f9fa;
 }
+
 
 .tab {
   display: flex;
@@ -122,9 +135,11 @@
   font-size: 1.1rem;
 }
 
+
 .tab-content {
   padding: 30px;
 }
+
 
 .projects-section h2,
 .quotes-section h2,
@@ -135,12 +150,14 @@
   font-weight: 600;
 }
 
+
 .projects-table {
   background: white;
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07);
 }
+
 
 .table-header {
   display: grid;
@@ -149,12 +166,14 @@
   border-bottom: 2px solid #dee2e6;
 }
 
+
 .header-cell {
   padding: 15px 20px;
   font-weight: 600;
   color: #495057;
   text-align: left;
 }
+
 
 .table-row {
   display: grid;
@@ -234,6 +253,61 @@
   transform: translateY(-1px);
 }
 
+
+/* Styles pour les devis */
+.quotes-table {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07);
+}
+
+
+.quotes-table .table-header {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1.5fr 1fr 1.5fr;
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
+}
+
+
+.quotes-table .table-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1.5fr 1fr 1.5fr;
+  border-bottom: 1px solid #e9ecef;
+  transition: background-color 0.2s;
+}
+
+
+/* Status badges */
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: inline-block;
+  text-align: center;
+}
+
+
+.status-en-attente {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+
+.status-accepté {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+
+.status-refusé {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+
 @media (max-width: 768px) {
   .employee-dashboard {
     padding: 15px;
@@ -286,3 +360,5 @@
     justify-content: center;
   }
 }
+
+
