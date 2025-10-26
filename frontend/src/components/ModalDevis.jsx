@@ -1,25 +1,42 @@
-import React from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 import '../styles/ModalDevis.css';
 
 
 const ModalDevis = ({ devis, onClose, onStatusChange }) => {
-  const handleStatusChange = async (newStatus) => {
+  const [reponseEmail, setReponseEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+
+
+  const handleSubmitResponse = async (e) => {
+    e.preventDefault();
+
+
+    if (!reponseEmail.trim()) {
+      alert('Veuillez entrer une réponse avant d\'envoyer');
+      return;
+    }
+
+
     try {
+      setLoading(true);
       const token = localStorage.getItem('token');
-      await axios.put(`http://localhost:5000/api/devis/${devis.idDevis}`, {
-        statut: newStatus
+      await axios.put(`http://localhost:5000/api/devis/${devis.idDevis}/response`, {
+        reponseEmail: reponseEmail,
+        statut: 'Traité'
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
 
-      onStatusChange(devis.idDevis, newStatus);
+      onStatusChange(devis.idDevis, 'Traité');
       onClose();
-      alert('Statut du devis mis à jour avec succès !');
+      alert('Réponse envoyée avec succès !');
     } catch (err) {
-      console.error('Erreur lors de la mise à jour du devis:', err);
-      alert('Erreur lors de la mise à jour du devis');
+      console.error('Erreur lors de l\'envoi de la réponse:', err);
+      alert('Erreur lors de l\'envoi de la réponse');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -45,32 +62,38 @@ const ModalDevis = ({ devis, onClose, onStatusChange }) => {
               </span>
             </p>
           </div>
-          <div className="status-actions">
-            <h3>Changer le statut :</h3>
-            <div className="status-buttons">
+
+
+          <form onSubmit={handleSubmitResponse} className="response-form">
+            <h3>Votre réponse au client :</h3>
+            <textarea
+              className="response-textarea"
+              value={reponseEmail}
+              onChange={(e) => setReponseEmail(e.target.value)}
+              placeholder="Bonjour,&#10;&#10;Nous avons bien reçu votre demande de devis...&#10;&#10;Cordialement,&#10;L'équipe Digital Craft"
+              rows="8"
+              required
+            />
+
+
+            <div className="modal-actions">
               <button
-                className="status-btn btn-accepte"
-                onClick={() => handleStatusChange('Accepté')}
-                disabled={devis.statut === 'Accepté'}
+                type="submit"
+                className="submit-btn"
+                disabled={loading}
               >
-                ✓ Accepter
+                {loading ? 'Envoi en cours...' : '📧 Envoyer la réponse'}
               </button>
               <button
-                className="status-btn btn-refuse"
-                onClick={() => handleStatusChange('Refusé')}
-                disabled={devis.statut === 'Refusé'}
+                type="button"
+                className="cancel-btn"
+                onClick={onClose}
+                disabled={loading}
               >
-                ✗ Refuser
-              </button>
-              <button
-                className="status-btn btn-enattente"
-                onClick={() => handleStatusChange('En attente')}
-                disabled={devis.statut === 'En attente'}
-              >
-                ⏱ En attente
+                Annuler
               </button>
             </div>
-          </div>
+          </form>
         </div>
       </div>
     </div>
