@@ -1,19 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import '../styles/ModalDevis.css';
+import '../styles/ModalAssignationDevis.css';
 
 
-const ModalDevis = ({ devis, onClose, onStatusChange }) => {
-  const [reponseEmail, setReponseEmail] = useState('');
+const ModalAssignationDevis = ({ isOpen, onClose, quote, onAssigned }) => {
+  const [employees, setEmployees] = useState([]);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState('');
   const [loading, setLoading] = useState(false);
 
 
-  const handleSubmitResponse = async (e) => {
+  useEffect(() => {
+    if (isOpen) {
+      fetchEmployees();
+      // Pré-sélectionner l'employé si le devis est déjà assigné
+      if (quote?.employeId) {
+        setSelectedEmployeeId(quote.employeId);
+      }
+    }
+  }, [isOpen, quote]);
+
+
+  const fetchEmployees = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get('http://localhost:5000/api/utilisateurs/employees-and-admins', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      // Filtrer uniquement les employés
+      const employesList = res.data.data.filter(user => user.role === 'Employé');
+      setEmployees(employesList);
+    } catch (err) {
+      console.error('Erreur lors du chargement des employés:', err);
+    }
+  };
+
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
 
-    if (!reponseEmail.trim()) {
-      alert('Veuillez entrer une réponse avant d\'envoyer');
+    if (!selectedEmployeeId) {
+      alert('Veuillez sélectionner un employé');
       return;
     }
 
@@ -21,75 +48,80 @@ const ModalDevis = ({ devis, onClose, onStatusChange }) => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      await axios.put(`http://localhost:5000/api/devis/${devis.idDevis}/response`, {
-        reponseEmail: reponseEmail,
-        statut: 'Traité'
+
+
+      // Mettre à jour le devis avec l'employé assigné
+      await axios.put(`http://localhost:5000/api/devis/${quote.idDevis}`, {
+        statut: quote.statut || 'En attente',
+        employeId: selectedEmployeeId
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
 
-      onStatusChange(devis.idDevis, 'Traité');
+      // Informer le parent que l'assignation a réussi
+      if (onAssigned) {
+        onAssigned(quote.idDevis, selectedEmployeeId);
+      }
+
+
+      alert('Devis assigné avec succès !');
       onClose();
-      alert('Réponse envoyée avec succès !');
     } catch (err) {
-      console.error('Erreur lors de l\'envoi de la réponse:', err);
-      alert('Erreur lors de l\'envoi de la réponse');
+      console.error('Erreur lors de l\'assignation:', err);
+      alert('Erreur lors de l\'assignation du devis');
     } finally {
       setLoading(false);
     }
   };
 
 
+  if (!isOpen || !quote) return null;
+
+
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-content assign-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>Répondre au Devis #{devis.numeroDevis}</h2>
+          <h2>Assigner le Devis #{quote.numeroDevis || quote.numero}</h2>
           <button className="close-btn" onClick={onClose}>×</button>
         </div>
+
+
         <div className="modal-body">
-          <div className="quote-details">
-            <p><strong>Demandeur :</strong> {devis.nomDemandeur} {devis.prenomDemandeur}</p>
-            <p><strong>Email :</strong> {devis.emailDemandeur}</p>
-            <p><strong>Service :</strong> {devis.serviceNom}</p>
-            <p><strong>Budget estimé :</strong> {devis.budgetEstime}€</p>
-            <p><strong>Description :</strong> {devis.description}</p>
-            <p>
-              <strong>Statut actuel :</strong>{' '}
-              <span className={`status-badge status-${devis.statut.toLowerCase().replace(' ', '-')}`}>
-                {devis.statut}
-              </span>
-            </p>
+          <div className="quote-info">
+            <p><strong>Demandeur :</strong> {quote?.nomDemandeur} {quote?.prenomDemandeur}</p>
+            <p><strong>Email :</strong> {quote?.emailDemandeur}</p>
+            <p><strong>Service :</strong> {quote?.serviceNom}</p>
+            <p><strong>Budget :</strong> {quote?.budgetEstime}€</p>
           </div>
 
 
-          <form onSubmit={handleSubmitResponse} className="response-form">
-            <h3>Votre réponse au client :</h3>
-            <textarea
-              className="response-textarea"
-              value={reponseEmail}
-              onChange={(e) => setReponseEmail(e.target.value)}
-              placeholder="Bonjour,&#10;&#10;Nous avons bien reçu votre demande de devis...&#10;&#10;Cordialement,&#10;L'équipe Digital Craft"
-              rows="8"
-              required
-            />
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label htmlFor="employee">Assigner à l'employé :</label>
+              <select
+                id="employee"
+                value={selectedEmployeeId}
+                onChange={(e) => setSelectedEmployeeId(e.target.value)}
+                required
+                className="form-select"
+              >
+                <option value="">-- Sélectionner un employé --</option>
+                {employees.map(emp => (
+                  <option key={emp.idUtilisateur} value={emp.idUtilisateur}>
+                    {emp.nom} {emp.prenom} ({emp.email})
+                  </option>
+                ))}
+              </select>
+            </div>
 
 
             <div className="modal-actions">
-              <button
-                type="submit"
-                className="submit-btn"
-                disabled={loading}
-              >
-                {loading ? 'Envoi en cours...' : '📧 Envoyer la réponse'}
+              <button type="submit" className="btn-primary" disabled={loading}>
+                {loading ? 'Assignation...' : '✓ Assigner'}
               </button>
-              <button
-                type="button"
-                className="cancel-btn"
-                onClick={onClose}
-                disabled={loading}
-              >
+              <button type="button" className="btn-secondary" onClick={onClose} disabled={loading}>
                 Annuler
               </button>
             </div>
@@ -101,7 +133,7 @@ const ModalDevis = ({ devis, onClose, onStatusChange }) => {
 };
 
 
-export default ModalDevis;
+export default ModalAssignationDevis;
 
 
 

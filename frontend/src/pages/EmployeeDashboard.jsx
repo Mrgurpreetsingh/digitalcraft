@@ -225,6 +225,42 @@ const EmployeeDashboard = () => {
             <div className="social-section">
               <h2>Réseaux Sociaux</h2>
               <p>Gestion des réseaux sociaux à venir.</p>
+
+
+              {/* TODO: ÉVOLUTION FUTURE - Gestion des réseaux sociaux
+
+
+                  Fonctionnalités à implémenter selon US 7 :
+                  - Publier des mises à jour sur les réseaux sociaux
+
+
+                  Technologies recommandées :
+                  1. Intégration API Facebook/Instagram :
+                     - Meta Business API
+                     - npm install facebook-nodejs-business-sdk
+
+
+                  2. Intégration API Twitter/X :
+                     - Twitter API v2
+                     - npm install twitter-api-v2
+
+
+                  3. Intégration API LinkedIn :
+                     - LinkedIn Marketing API
+                     - npm install linkedin-api-client
+
+
+                  Exemple de structure :
+                  - Formulaire de création de post
+                  - Sélection des réseaux (Facebook, Twitter, LinkedIn)
+                  - Prévisualisation du post
+                  - Planification de publication (optionnel)
+                  - Historique des publications
+
+
+                  Note : Nécessite la création de comptes développeurs sur chaque plateforme
+                  et l'obtention de clés API (tokens d'accès).
+              */}
             </div>
           )}
         </div>
@@ -245,5 +281,7 @@ const EmployeeDashboard = () => {
 
 
 export default EmployeeDashboard;
+
+
 
 

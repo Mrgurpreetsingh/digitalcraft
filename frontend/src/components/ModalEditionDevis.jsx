@@ -75,14 +75,14 @@ const ModalEditionDevis = ({ isOpen, onClose, quote, onUpdated }) => {
   };
 
 
-  if (!isOpen) return null;
+  if (!isOpen || !quote) return null;
 
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content edit-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>Modifier le Devis #{quote?.numeroDevis || quote?.numero}</h2>
+          <h2>Modifier le Devis #{quote.numeroDevis || quote.numero}</h2>
           <button className="close-btn" onClick={onClose}>×</button>
         </div>
 
@@ -215,6 +215,10 @@ const ModalEditionDevis = ({ isOpen, onClose, quote, onUpdated }) => {
 
 
 export default ModalEditionDevis;
+
+
+
+
 
 
 

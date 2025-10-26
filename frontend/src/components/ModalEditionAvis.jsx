@@ -69,7 +69,7 @@ const ModalEditionAvis = ({ isOpen, onClose, review, onUpdated }) => {
   };
 
 
-  if (!isOpen) return null;
+  if (!isOpen || !review) return null;
 
 
   return (
@@ -183,6 +183,10 @@ const ModalEditionAvis = ({ isOpen, onClose, review, onUpdated }) => {
 
 
 export default ModalEditionAvis;
+
+
+
+
 
 
 

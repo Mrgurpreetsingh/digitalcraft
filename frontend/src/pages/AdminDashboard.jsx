@@ -7,7 +7,11 @@ import AddUserModal from '../components/AddUserModal';
 import EditUserModal from '../components/EditUserModal';
 import ServiceModal from '../components/ServiceModal';
 import ProjectModal from '../components/ProjectModal';
+import ModalAssignationDevis from '../components/ModalAssignationDevis';
+import ModalEditionDevis from '../components/ModalEditionDevis';
+import ModalEditionAvis from '../components/ModalEditionAvis';
 import '../styles/AdminDashboard.css';
+
 
 const AdminDashboard = () => {
   const { isAuthenticated, user } = useAuth();
@@ -37,6 +41,12 @@ const AdminDashboard = () => {
   const [selectedProject, setSelectedProject] = useState(null);
   const [clients, setClients] = useState([]);
   const [employes, setEmployes] = useState([]);
+  const [showAssignQuoteModal, setShowAssignQuoteModal] = useState(false);
+  const [selectedQuote, setSelectedQuote] = useState(null);
+  const [showEditQuoteModal, setShowEditQuoteModal] = useState(false);
+  const [showEditReviewModal, setShowEditReviewModal] = useState(false);
+  const [selectedReview, setSelectedReview] = useState(null);
+
 
   // Configuration axios avec token
   const api = axios.create({
@@ -46,11 +56,13 @@ const AdminDashboard = () => {
     }
   });
 
+
   // Utiliser useCallback pour éviter les dépendances manquantes
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
+
 
       // Récupérer toutes les données en parallèle
       const [usersRes, projectsRes, servicesRes, quotesRes, reviewsRes] = await Promise.all([
@@ -61,6 +73,7 @@ const AdminDashboard = () => {
         api.get('/avis/debug/firebase') // Lire les VRAIS avis Firebase
       ]);
 
+
       setUsers(usersRes.data.data.map(user => ({
         id: user.idUtilisateur,
         name: `${user.nom} ${user.prenom}`,
@@ -70,6 +83,7 @@ const AdminDashboard = () => {
         avatar: `${user.nom[0]}${user.prenom[0]}`.toUpperCase(),
         dateCreation: user.dateCreation
       })));
+
 
       setProjects(projectsRes.data.data.map(project => ({
         id: project.idProjet,
@@ -82,6 +96,7 @@ const AdminDashboard = () => {
         dateCreation: project.dateCreation
       })));
 
+
       setServices(servicesRes.data.data.map(service => ({
         id: service.idService,
         name: service.titre,
@@ -91,6 +106,7 @@ const AdminDashboard = () => {
         dateCreation: service.dateCreation,
         statut: service.statut // Ajout du champ statut pour filtrage
       })));
+
 
       setQuotes(quotesRes.data.data.map(quote => ({
         id: quote.idDevis,
@@ -102,6 +118,7 @@ const AdminDashboard = () => {
         status: quote.statut,
         dateCreation: quote.dateCreation
       })));
+
 
       // Nouveau : traiter les avis Firebase
       setReviews(reviewsRes.data.data.map(review => ({
@@ -116,6 +133,7 @@ const AdminDashboard = () => {
         dateCreation: review.createdAt
       })));
 
+
       // Calculer les statistiques
       setStats({
         totalUsers: usersRes.data.data.length,
@@ -125,6 +143,7 @@ const AdminDashboard = () => {
         totalReviews: reviewsRes.data.data.length // Nouveau
       });
 
+
     } catch (err) {
       console.error('Erreur lors du chargement des données:', err);
       setError('Erreur lors du chargement des données: ' + (err.response?.data?.message || err.message));
@@ -133,20 +152,22 @@ const AdminDashboard = () => {
     }
   }, []); // Suppression de la dépendance api pour éviter la boucle infinie
 
+
   useEffect(() => {
     // Vérifier l'authentification et les permissions
     if (!isAuthenticated) {
       navigate('/connexion');
       return;
     }
-    
+   
     if (user?.role !== 'Administrateur') {
       navigate('/');
       return;
     }
-    
+   
     fetchData();
   }, [isAuthenticated, user, navigate]); // Dépendances ajoutées
+
 
   // Récupérer clients et employés pour les dropdowns
   useEffect(() => {
@@ -162,6 +183,7 @@ const AdminDashboard = () => {
       });
   }, []);
 
+
   // Actions CRUD pour les utilisateurs
   const handleDeleteUser = async (userId) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {
@@ -175,6 +197,7 @@ const AdminDashboard = () => {
     }
   };
 
+
   const handleEditUser = (userId) => {
     const user = users.find(u => u.id === userId);
     if (user) {
@@ -182,7 +205,7 @@ const AdminDashboard = () => {
       const nameParts = user.name.split(' ');
       const nom = nameParts.slice(0, -1).join(' '); // Tout sauf le dernier élément
       const prenom = nameParts[nameParts.length - 1]; // Dernier élément
-      
+     
       setSelectedUser({
         id: user.id,
         email: user.email,
@@ -193,6 +216,7 @@ const AdminDashboard = () => {
       setShowEditUserModal(true);
     }
   };
+
 
   // Actions CRUD pour les projets
   const handleDeleteProject = async (projectId) => {
@@ -207,6 +231,7 @@ const AdminDashboard = () => {
     }
   };
 
+
   // Modification projet
   const handleEditProject = (projectId) => {
     const project = projects.find(p => p.id === projectId);
@@ -220,6 +245,7 @@ const AdminDashboard = () => {
       setShowProjectModal(true);
     }
   };
+
 
   // Sauvegarde (ajout ou modif)
   const handleProjectSave = async (form) => {
@@ -239,6 +265,7 @@ const AdminDashboard = () => {
     }
   };
 
+
   // Actions CRUD pour les services
   const handleDeleteService = async (serviceId) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ce service ?')) {
@@ -251,6 +278,9 @@ const AdminDashboard = () => {
       }
     }
   };
+
+
+
 
 
 
@@ -267,10 +297,36 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleEditQuote = (quoteId) => {
-    // TODO: Implémenter modal de modification de devis
-    alert(`Fonctionnalité de modification de devis ${quoteId} à implémenter`);
+
+  const handleAssignQuote = (quoteId) => {
+    const quote = quotes.find(q => q.id === quoteId);
+    if (quote) {
+      setSelectedQuote(quote);
+      setShowAssignQuoteModal(true);
+    }
   };
+
+
+  const handleQuoteAssigned = (quoteId, employeeId) => {
+    // Rafraîchir les données pour afficher l'employé assigné
+    fetchData();
+  };
+
+
+  const handleEditQuote = (quoteId) => {
+    const quote = quotes.find(q => q.id === quoteId);
+    if (quote) {
+      setSelectedQuote(quote);
+      setShowEditQuoteModal(true);
+    }
+  };
+
+
+  const handleQuoteUpdated = (quoteId) => {
+    // Rafraîchir les données pour afficher les modifications
+    fetchData();
+  };
+
 
   // NOUVEAU : Actions CRUD pour les avis Firebase
   const handleDeleteReview = async (reviewId) => {
@@ -286,20 +342,21 @@ const AdminDashboard = () => {
     }
   };
 
+
   const handleEditReview = async (reviewId) => {
-    // TODO: Implémenter la modification d'avis avec modal
-    console.log('Éditer avis:', reviewId);
-    // Pour l'instant, on peut juste changer le statut
-    const newStatus = prompt('Nouveau statut (pending/approved/rejected):');
-    if (newStatus && ['pending', 'approved', 'rejected'].includes(newStatus)) {
-      try {
-        await api.put(`/avis/firebase/${reviewId}`, { status: newStatus });
-        fetchData(); // Recharger les données
-      } catch (err) {
-        setError('Erreur lors de la modification: ' + (err.response?.data?.message || err.message));
-      }
+    const review = reviews.find(r => r.id === reviewId);
+    if (review) {
+      setSelectedReview(review);
+      setShowEditReviewModal(true);
     }
   };
+
+
+  const handleReviewUpdated = (reviewId) => {
+    // Rafraîchir les données
+    fetchData();
+  };
+
 
   const handleValidateReview = async (reviewId, status) => {
     try {
@@ -312,10 +369,12 @@ const AdminDashboard = () => {
     }
   };
 
+
   // Actions d'ajout
   const handleAddUser = () => {
     setShowAddUserModal(true);
   };
+
 
   const handleUserAdded = (newUser) => {
     // Ajouter le nouvel utilisateur à la liste
@@ -332,6 +391,7 @@ const AdminDashboard = () => {
     setStats(prev => ({ ...prev, totalUsers: prev.totalUsers + 1 }));
   };
 
+
   const handleUserUpdated = (updatedUser) => {
     // Mettre à jour l'utilisateur dans la liste
     const userToUpdate = {
@@ -345,12 +405,13 @@ const AdminDashboard = () => {
     };
     setUsers(prev => prev.map(user => user.id === userToUpdate.id ? userToUpdate : user));
   };
-  
+ 
   const handleAddService = () => {
     setSelectedService(null);
     setIsEditService(false);
     setShowServiceModal(true);
   };
+
 
   const handleEditService = (serviceId) => {
     const service = services.find(s => s.id === serviceId);
@@ -360,6 +421,7 @@ const AdminDashboard = () => {
       setShowServiceModal(true);
     }
   };
+
 
   const handleServiceAdded = (newService) => {
     // Ajouter le nouveau service à la liste
@@ -376,6 +438,7 @@ const AdminDashboard = () => {
     setStats(prev => ({ ...prev, totalServices: prev.totalServices + 1 }));
   };
 
+
   const handleServiceUpdated = (updatedService) => {
     // Mettre à jour le service dans la liste
     const serviceToUpdate = {
@@ -390,6 +453,7 @@ const AdminDashboard = () => {
     setServices(prev => prev.map(service => service.id === serviceToUpdate.id ? serviceToUpdate : service));
   };
 
+
   // NOUVEAU : Synchroniser Firebase
   const handleSyncFirebase = async () => {
     try {
@@ -401,18 +465,20 @@ const AdminDashboard = () => {
     }
   };
 
+
   // Ajout projet
   const handleAddProject = () => {
     setSelectedProject(null);
     setShowProjectModal(true);
   };
 
+
   const getStatusClass = (status) => {
-    const statusMap = { 
-      'Actif': 'actif', 
-      'En cours': 'en-cours', 
-      'Inactif': 'inactif', 
-      'En attente': 'en-attente', 
+    const statusMap = {
+      'Actif': 'actif',
+      'En cours': 'en-cours',
+      'Inactif': 'inactif',
+      'En attente': 'en-attente',
       'Terminé': 'termine',
       'Accepté': 'accepte',
       'Refusé': 'refuse',
@@ -423,9 +489,11 @@ const AdminDashboard = () => {
     return statusMap[status] || 'inactif';
   };
 
+
   const renderStars = (rating) => {
     return "★".repeat(rating) + "☆".repeat(5 - rating);
   };
+
 
   // Vérifier l'authentification
   if (!isAuthenticated) {
@@ -439,6 +507,7 @@ const AdminDashboard = () => {
     );
   }
 
+
   // Vérifier les permissions
   if (user?.role !== 'Administrateur') {
     return (
@@ -451,6 +520,7 @@ const AdminDashboard = () => {
     );
   }
 
+
   if (loading) return (
     <div className="admin-dashboard-container">
       <div className="admin-loading-container">
@@ -460,6 +530,7 @@ const AdminDashboard = () => {
     </div>
   );
 
+
   if (error) return (
     <div className="admin-dashboard-container">
       <div className="admin-error-container">
@@ -468,6 +539,7 @@ const AdminDashboard = () => {
       </div>
     </div>
   );
+
 
   return (
     <div className="admin-dashboard-container">
@@ -480,6 +552,7 @@ const AdminDashboard = () => {
           <Settings size={24} color="#007bff" />
         </div>
       </div>
+
 
       <div className="admin-main-content">
         {/* Statistiques */}
@@ -531,6 +604,7 @@ const AdminDashboard = () => {
           </div>
         </div>
 
+
         {/* Actions */}
         <div className="admin-action-card">
           <div className="admin-action-buttons">
@@ -543,49 +617,53 @@ const AdminDashboard = () => {
             <button className="admin-action-button" onClick={handleAddProject}>
               <Plus size={16} /> Ajouter un Projet
             </button>
-            {/* Supprimé : L'admin ne crée pas d'avis selon le cahier des charges */}
+            <button className="admin-action-button" onClick={() => navigate('/statistiques')}>
+              <BarChart3 size={16} /> Voir les Statistiques
+            </button>
             <button className="admin-action-button" onClick={handleSyncFirebase}>
               <MessageCircle size={16} /> Synchroniser Firebase
             </button>
           </div>
         </div>
 
+
         {/* Contenu principal */}
         <div className="admin-content-card">
           <div className="admin-tab-container">
             <nav className="admin-tab-nav">
-              <button 
-                className={`admin-tab-button ${activeTab === 'users' ? 'active' : ''}`} 
+              <button
+                className={`admin-tab-button ${activeTab === 'users' ? 'active' : ''}`}
                 onClick={() => setActiveTab('users')}
               >
                 <Users size={16} /> Utilisateurs ({users.length})
               </button>
-              <button 
-                className={`admin-tab-button ${activeTab === 'services' ? 'active' : ''}`} 
+              <button
+                className={`admin-tab-button ${activeTab === 'services' ? 'active' : ''}`}
                 onClick={() => setActiveTab('services')}
               >
                 <FileText size={16} /> Services ({services.length})
               </button>
-              <button 
-                className={`admin-tab-button ${activeTab === 'projects' ? 'active' : ''}`} 
+              <button
+                className={`admin-tab-button ${activeTab === 'projects' ? 'active' : ''}`}
                 onClick={() => setActiveTab('projects')}
               >
                 <FolderOpen size={16} /> Projets ({projects.length})
               </button>
-              <button 
-                className={`admin-tab-button ${activeTab === 'quotes' ? 'active' : ''}`} 
+              <button
+                className={`admin-tab-button ${activeTab === 'quotes' ? 'active' : ''}`}
                 onClick={() => setActiveTab('quotes')}
               >
                 <MessageSquare size={16} /> Devis ({quotes.length})
               </button>
-              <button 
-                className={`admin-tab-button ${activeTab === 'reviews' ? 'active' : ''}`} 
+              <button
+                className={`admin-tab-button ${activeTab === 'reviews' ? 'active' : ''}`}
                 onClick={() => setActiveTab('reviews')}
               >
                 <Star size={16} /> Avis ({reviews.length})
               </button>
             </nav>
           </div>
+
 
           <div className="admin-tab-content">
             {/* Onglet Utilisateurs */}
@@ -627,16 +705,16 @@ const AdminDashboard = () => {
                           </td>
                           <td className="admin-table-cell">
                             <div className="admin-action-buttons-table">
-                              <button 
-                                className="admin-icon-button edit" 
-                                onClick={() => handleEditUser(user.id)} 
+                              <button
+                                className="admin-icon-button edit"
+                                onClick={() => handleEditUser(user.id)}
                                 title="Modifier"
                               >
                                 <Edit size={16} />
                               </button>
-                              <button 
-                                className="admin-icon-button delete" 
-                                onClick={() => handleDeleteUser(user.id)} 
+                              <button
+                                className="admin-icon-button delete"
+                                onClick={() => handleDeleteUser(user.id)}
                                 title="Supprimer"
                               >
                                 <Trash2 size={16} />
@@ -650,6 +728,7 @@ const AdminDashboard = () => {
                 </div>
               </div>
             )}
+
 
             {/* Onglet Services */}
             {activeTab === 'services' && (
@@ -679,8 +758,8 @@ const AdminDashboard = () => {
                           </td>
                           <td className="admin-table-cell">
                             <div className="admin-service-description-cell">
-                              {service.description.length > 100 
-                                ? `${service.description.substring(0, 100)}...` 
+                              {service.description.length > 100
+                                ? `${service.description.substring(0, 100)}...`
                                 : service.description}
                             </div>
                           </td>
@@ -694,16 +773,16 @@ const AdminDashboard = () => {
                           </td>
                           <td className="admin-table-cell">
                             <div className="admin-action-buttons-table">
-                              <button 
-                                className="admin-icon-button edit" 
-                                onClick={() => handleEditService(service.id)} 
+                              <button
+                                className="admin-icon-button edit"
+                                onClick={() => handleEditService(service.id)}
                                 title="Modifier"
                               >
                                 <Edit size={16} />
                               </button>
-                              <button 
-                                className="admin-icon-button delete" 
-                                onClick={() => handleDeleteService(service.id)} 
+                              <button
+                                className="admin-icon-button delete"
+                                onClick={() => handleDeleteService(service.id)}
                                 title="Supprimer"
                               >
                                 <Trash2 size={16} />
@@ -717,6 +796,7 @@ const AdminDashboard = () => {
                 </div>
               </div>
             )}
+
 
             {/* Onglet Projets */}
             {activeTab === 'projects' && (
@@ -743,13 +823,13 @@ const AdminDashboard = () => {
                         </div>
                       </div>
                       <div className="admin-project-actions">
-                        <button 
+                        <button
                           className="admin-project-action-button modify"
                           onClick={() => handleEditProject(project.id)}
                         >
                           <Edit size={16} /> Modifier
                         </button>
-                        <button 
+                        <button
                           className="admin-project-action-button delete"
                           onClick={() => handleDeleteProject(project.id)}
                         >
@@ -761,6 +841,7 @@ const AdminDashboard = () => {
                 </div>
               </div>
             )}
+
 
             {/* Onglet Devis */}
             {activeTab === 'quotes' && (
@@ -794,16 +875,23 @@ const AdminDashboard = () => {
                           </td>
                           <td className="admin-table-cell">
                             <div className="admin-action-buttons-table">
-                              <button 
-                                className="admin-icon-button edit" 
-                                onClick={() => handleEditQuote(quote.id)} 
+                              <button
+                                className="admin-icon-button assign"
+                                onClick={() => handleAssignQuote(quote.id)}
+                                title="Assigner à un employé"
+                              >
+                                <User size={16} />
+                              </button>
+                              <button
+                                className="admin-icon-button edit"
+                                onClick={() => handleEditQuote(quote.id)}
                                 title="Modifier"
                               >
                                 <Edit size={16} />
                               </button>
-                              <button 
-                                className="admin-icon-button delete" 
-                                onClick={() => handleDeleteQuote(quote.id)} 
+                              <button
+                                className="admin-icon-button delete"
+                                onClick={() => handleDeleteQuote(quote.id)}
                                 title="Supprimer"
                               >
                                 <Trash2 size={16} />
@@ -818,6 +906,7 @@ const AdminDashboard = () => {
               </div>
             )}
 
+
             {/* NOUVEAU : Onglet Avis */}
             {activeTab === 'reviews' && (
               <div>
@@ -830,7 +919,7 @@ const AdminDashboard = () => {
                           <Star size={24} color="#2563eb" />
                         </div>
                         <span className={`admin-status-badge ${getStatusClass(review.status)}`}>
-                          {review.status === 'pending' ? 'En attente' : 
+                          {review.status === 'pending' ? 'En attente' :
                            review.status === 'approved' ? 'Approuvé' : 'Rejeté'}
                         </span>
                       </div>
@@ -853,13 +942,13 @@ const AdminDashboard = () => {
                       <div className="admin-review-actions">
                         {review.status === 'pending' && (
                           <>
-                            <button 
+                            <button
                               className="admin-review-action-button approve"
                               onClick={() => handleValidateReview(review.id, 'approved')}
                             >
                               <Star size={16} /> Approuver
                             </button>
-                            <button 
+                            <button
                               className="admin-review-action-button reject"
                               onClick={() => handleValidateReview(review.id, 'rejected')}
                             >
@@ -867,13 +956,13 @@ const AdminDashboard = () => {
                             </button>
                           </>
                         )}
-                        <button 
+                        <button
                           className="admin-review-action-button modify"
                           onClick={() => handleEditReview(review.id)}
                         >
                           <Edit size={16} /> Modifier
                         </button>
-                        <button 
+                        <button
                           className="admin-review-action-button delete"
                           onClick={() => handleDeleteReview(review.id)}
                         >
@@ -889,12 +978,14 @@ const AdminDashboard = () => {
         </div>
       </div>
 
+
       {/* Modal d'ajout d'utilisateur */}
       <AddUserModal
         isOpen={showAddUserModal}
         onClose={() => setShowAddUserModal(false)}
         onUserAdded={handleUserAdded}
       />
+
 
       {/* Modal de modification d'utilisateur */}
       <EditUserModal
@@ -906,6 +997,7 @@ const AdminDashboard = () => {
         onUserUpdated={handleUserUpdated}
         user={selectedUser}
       />
+
 
       {/* Modal de service */}
       <ServiceModal
@@ -921,6 +1013,7 @@ const AdminDashboard = () => {
         isEdit={isEditService}
       />
 
+
       {/* Modal de projet */}
       <ProjectModal
         isOpen={showProjectModal}
@@ -931,8 +1024,47 @@ const AdminDashboard = () => {
         employes={employes}
         project={selectedProject}
       />
+
+
+      {/* Modal d'assignation de devis */}
+      <ModalAssignationDevis
+        isOpen={showAssignQuoteModal}
+        onClose={() => {
+          setShowAssignQuoteModal(false);
+          setSelectedQuote(null);
+        }}
+        quote={selectedQuote}
+        onAssigned={handleQuoteAssigned}
+      />
+
+
+      {/* Modal d'édition de devis */}
+      <ModalEditionDevis
+        isOpen={showEditQuoteModal}
+        onClose={() => {
+          setShowEditQuoteModal(false);
+          setSelectedQuote(null);
+        }}
+        quote={selectedQuote}
+        onUpdated={handleQuoteUpdated}
+      />
+
+
+      {/* Modal d'édition d'avis */}
+      <ModalEditionAvis
+        isOpen={showEditReviewModal}
+        onClose={() => {
+          setShowEditReviewModal(false);
+          setSelectedReview(null);
+        }}
+        review={selectedReview}
+        onUpdated={handleReviewUpdated}
+      />
     </div>
   );
 };
 
+
 export default AdminDashboard;
+
+

@@ -1,4 +1,3 @@
-
 // src/controllers/devisController.js
 const { executeQuery } = require('../config/database');
 
@@ -298,9 +297,42 @@ class DevisController {
       }
 
 
+      // TODO: ÉVOLUTION FUTURE - Envoi automatique d'email au client
+      // Pour implémenter l'envoi automatique d'emails, il faudrait :
+      // 1. Installer nodemailer : npm install nodemailer
+      // 2. Configurer SMTP (Gmail, SendGrid, Mailjet, etc.)
+      // 3. Exemple de code à ajouter ici :
+      /*
+        const nodemailer = require('nodemailer');
+
+
+        const transporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASSWORD
+          }
+        });
+
+
+        const mailOptions = {
+          from: process.env.EMAIL_USER,
+          to: devis[0].emailDemandeur,
+          subject: `Réponse à votre demande de devis ${devis[0].numeroDevis}`,
+          text: reponseEmail,
+          html: `<p>${reponseEmail.replace(/\n/g, '<br>')}</p>`
+        };
+
+
+        await transporter.sendMail(mailOptions);
+      */
+      // Pour l'instant, la réponse est stockée dans la BDD et l'employé
+      // doit copier-coller le texte pour l'envoyer manuellement au client.
+
+
       res.json({
         success: true,
-        message: 'Réponse au devis envoyée avec succès',
+        message: 'Réponse au devis enregistrée avec succès',
         data: {
           reponseEmail,
           statut: nouveauStatut
@@ -350,5 +382,7 @@ async function generateNumeroDevis() {
 
 
 module.exports = DevisController;
+
+
 
 
