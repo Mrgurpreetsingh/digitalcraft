@@ -96,18 +96,8 @@ const EmployeeDashboard = () => {
   };
 
 
-  const handleModify = (projectId) => {
-    // TODO: Logique de modification à implémenter
-  };
-
-
-  const handleUpdate = (projectId) => {
-    // TODO: Logique de mise à jour à implémenter
-  };
-
-
   const handleAddProject = () => {
-    // Désactivé pour l'employé
+    // Désactivé pour l'employé - seul l'admin peut ajouter des projets
   };
 
 
@@ -165,7 +155,6 @@ const EmployeeDashboard = () => {
                 <div className="table-header">
                   <div className="header-cell">Titre</div>
                   <div className="header-cell">Statut</div>
-                  <div className="header-cell">Actions</div>
                 </div>
                 {loading ? <div>Chargement...</div> : error ? <div>{error}</div> : projects.map(project => (
                   <div key={project.idProjet} className="table-row">
@@ -184,14 +173,6 @@ const EmployeeDashboard = () => {
                         <option value="En attente">En attente</option>
                         <option value="Annulé">Annulé</option>
                       </select>
-                    </div>
-                    <div className="cell actions-cell">
-                      <button className="action-btn modify-btn" onClick={() => handleModify(project.idProjet)}>
-                        ✏️ Modifier
-                      </button>
-                      <button className="action-btn update-btn" onClick={() => handleUpdate(project.idProjet)}>
-                        🔄 Mettre à Jour
-                      </button>
                     </div>
                   </div>
                 ))}

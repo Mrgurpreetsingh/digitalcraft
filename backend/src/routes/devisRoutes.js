@@ -1,3 +1,4 @@
+
 // src/routes/devisRoutes.js
 const express = require('express');
 const router = express.Router();
@@ -6,6 +7,7 @@ const { authenticateToken, requireAdmin, requireEmployee } = require('../middlew
 const { validationResult } = require('express-validator');
 // TODO: Ajouter un vrai validateDevis si besoin
 // const { validateDevis } = require('../middleware/validation');
+
 
 // Middleware pour gérer les erreurs de validation
 const handleValidationErrors = (req, res, next) => {
@@ -20,36 +22,49 @@ const handleValidationErrors = (req, res, next) => {
   next();
 };
 
+
 // Récupérer tous les devis (admin/employé)
 router.get('/', authenticateToken, requireEmployee, DevisController.getAll);
+
 
 // Route pour les devis assignés à l'employé connecté
 router.get('/assigned', authenticateToken, requireEmployee, DevisController.getAssignedToEmployee);
 
+
+// Répondre à un devis (admin/employé)
+router.put('/:id/response', authenticateToken, requireEmployee, DevisController.respondToDevis);
+
+
 // Récupérer un devis par ID (admin/employé)
 router.get('/:id', authenticateToken, requireEmployee, DevisController.getById);
 
+
 // Créer un devis (public)
-router.post('/', 
+router.post('/',
   // validateDevis, // décommente si tu ajoutes la validation
-  // handleValidationErrors, 
+  // handleValidationErrors,
   DevisController.create
 );
 
+
 // Modifier un devis (admin/employé)
-router.put('/:id', 
-  authenticateToken, 
-  requireEmployee, 
+router.put('/:id',
+  authenticateToken,
+  requireEmployee,
   // validateDevis, // décommente si tu ajoutes la validation
-  // handleValidationErrors, 
+  // handleValidationErrors,
   DevisController.update
 );
 
+
 // Supprimer un devis (admin)
-router.delete('/:id', 
-  authenticateToken, 
-  requireAdmin, 
+router.delete('/:id',
+  authenticateToken,
+  requireAdmin,
   DevisController.delete
 );
 
+
 module.exports = router;
+
+

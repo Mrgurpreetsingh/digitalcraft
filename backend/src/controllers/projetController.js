@@ -1,6 +1,7 @@
 // src/controllers/projetController.js
 const { executeQuery } = require('../config/database');
 
+
 class ProjetController {
   // Récupérer tous les projets
   static async getAll(req, res) {
@@ -27,17 +28,18 @@ class ProjetController {
     }
   }
 
+
   // Récupérer un projet par ID
   static async getById(req, res) {
     try {
       const { id } = req.params;
       const query = `
-        SELECT 
-          p.*, 
-          s.titre as serviceTitre, 
-          u1.nom as clientNom, 
+        SELECT
+          p.*,
+          s.titre as serviceTitre,
+          u1.nom as clientNom,
           u1.prenom as clientPrenom,
-          u2.nom as employeNom, 
+          u2.nom as employeNom,
           u2.prenom as employePrenom
         FROM Projet p
         LEFT JOIN Service s ON p.typeServiceId = s.idService
@@ -55,6 +57,7 @@ class ProjetController {
       res.status(500).json({ success: false, message: 'Erreur serveur' });
     }
   }
+
 
   // Créer un nouveau projet
   static async create(req, res) {
@@ -76,6 +79,7 @@ class ProjetController {
     }
   }
 
+
   // Modifier un projet
   static async update(req, res) {
     try {
@@ -94,6 +98,7 @@ class ProjetController {
     }
   }
 
+
   // Supprimer un projet
   static async delete(req, res) {
     try {
@@ -109,17 +114,18 @@ class ProjetController {
     }
   }
 
+
   // Récupérer les projets par statut
   static async getByStatut(req, res) {
     try {
       const { statut } = req.params;
       const query = `
-        SELECT 
-          p.*, 
-          s.titre as serviceTitre, 
-          u1.nom as clientNom, 
+        SELECT
+          p.*,
+          s.titre as serviceTitre,
+          u1.nom as clientNom,
           u1.prenom as clientPrenom,
-          u2.nom as employeNom, 
+          u2.nom as employeNom,
           u2.prenom as employePrenom
         FROM Projet p
         LEFT JOIN Service s ON p.typeServiceId = s.idService
@@ -135,6 +141,7 @@ class ProjetController {
       res.status(500).json({ success: false, message: 'Erreur serveur' });
     }
   }
+
 
   // Récupérer les projets assignés à l'employé connecté
   static async getAssignedToEmployee(req, res) {
@@ -154,6 +161,87 @@ class ProjetController {
       res.status(500).json({ success: false, message: 'Erreur serveur' });
     }
   }
+
+
+  // Mettre à jour uniquement le statut d'un projet (employé)
+  static async updateStatus(req, res) {
+    try {
+      const { id } = req.params;
+      const { statut } = req.body;
+      const employeId = req.user.id;
+
+
+      // Vérifier que le statut est fourni
+      if (!statut) {
+        return res.status(400).json({
+          success: false,
+          message: 'Le statut est requis'
+        });
+      }
+
+
+      // Vérifier que le statut est valide
+      const statutsValides = ['En cours', 'Terminé', 'En attente', 'Annulé'];
+      if (!statutsValides.includes(statut)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Statut invalide. Valeurs acceptées: ' + statutsValides.join(', ')
+        });
+      }
+
+
+      // Vérifier que le projet existe et appartient à l'employé (sauf si admin)
+      const checkQuery = 'SELECT * FROM Projet WHERE idProjet = ?';
+      const projet = await executeQuery(checkQuery, [id]);
+
+
+      if (projet.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Projet non trouvé'
+        });
+      }
+
+
+      // Si l'utilisateur est employé (pas admin), vérifier qu'il est assigné au projet
+      if (req.user.role === 'Employé' && projet[0].employeId !== employeId) {
+        return res.status(403).json({
+          success: false,
+          message: 'Vous n\'êtes pas autorisé à modifier ce projet'
+        });
+      }
+
+
+      // Mettre à jour le statut
+      const updateQuery = 'UPDATE Projet SET statut = ? WHERE idProjet = ?';
+      const result = await executeQuery(updateQuery, [statut, id]);
+
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Impossible de mettre à jour le projet'
+        });
+      }
+
+
+      res.json({
+        success: true,
+        message: 'Statut du projet mis à jour avec succès',
+        data: { statut }
+      });
+    } catch (error) {
+      console.error('Erreur updateStatus:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erreur serveur'
+      });
+    }
+  }
 }
 
+
 module.exports = ProjetController;
+
+
+

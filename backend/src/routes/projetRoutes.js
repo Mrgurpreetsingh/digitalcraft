@@ -26,6 +26,10 @@ router.get('/', ProjetController.getAll);
 // Route pour les projets assignés à l'employé connecté
 router.get('/assigned', authenticateToken, requireEmployee, ProjetController.getAssignedToEmployee);
 
+// Mettre à jour uniquement le statut d'un projet (employé/admin)
+router.put('/:id/status', authenticateToken, requireEmployee, ProjetController.updateStatus);
+
+
 // Récupérer un projet par ID (public)
 router.get('/:id', ProjetController.getById);
 
