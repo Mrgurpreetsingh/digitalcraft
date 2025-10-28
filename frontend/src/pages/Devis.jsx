@@ -150,66 +150,74 @@ const DevisPage = () => {
             {error && <p className="devis-error">{error}</p>}
             {loading && <p className="devis-loading">Chargement des services...</p>}
             <div className="devis-field-container">
-              <label className="devis-label">
+              <label htmlFor="devis-prenom" className="devis-label"> {/*htmlFor + id : Lier les labels aux champs: Un utilisateur malvoyant peut cliquer sur le label pour focus le champ. Les lecteurs d'écran associent automatiquement les deux.*/}
                 Prénom <span className="devis-required">*</span>
               </label>
               <div className="devis-input-container">
                 <User className="devis-input-icon" />
                 <input
+                  id="devis-prenom"
                   type="text"
                   name="prenom"
                   value={formData.prenom}
                   onChange={handleInputChange}
                   placeholder="Votre prénom"
                   className="devis-input"
+                  aria-required="true"
                   required
                 />
               </div>
             </div>
             <div className="devis-field-container">
-              <label className="devis-label">
+              <label htmlFor="devis-nom"className="devis-label">
                 Nom <span className="devis-required">*</span>
               </label>
               <div className="devis-input-container">
                 <User className="devis-input-icon" />
                 <input
+                  id="devis-nom"
                   type="text"
                   name="nom"
                   value={formData.nom}
                   onChange={handleInputChange}
                   placeholder="Votre nom"
                   className="devis-input"
+                  aria-required="true"
                   required
                 />
               </div>
             </div>
             <div className="devis-field-container">
-              <label className="devis-label">
+              <label htmlFor="devis-email" className="devis-label">
                 Email <span className="devis-required">*</span>
               </label>
               <div className="devis-input-container">
                 <Mail className="devis-input-icon" />
                 <input
+                  id="devis-email"
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
                   placeholder="votre@email.com"
                   className="devis-input"
+                  aria-required="true"
                   required
                 />
               </div>
             </div>
             <div className="devis-field-container">
-              <label className="devis-label">
+              <label htmlFor="devis-service" className="devis-label">
                 Type de service <span className="devis-required">*</span>
               </label>
               <div className="devis-input-container">
                 <select
+                  id="devis-service"
                   name="typeServiceId"
                   value={formData.typeServiceId}
                   onChange={handleInputChange}
                   className="devis-select"
+                  aria-required="true"
                   required
                 >
                   <option value="">Sélectionnez un service</option>
@@ -222,15 +230,17 @@ const DevisPage = () => {
               </div>
             </div>
             <div className="devis-field-container">
-              <label className="devis-label">
+              <label htmlFor="devis-budget" className="devis-label">
                 Budget estimé <span className="devis-required">*</span>
               </label>
               <div className="devis-input-container">
                 <select
+                  id="devis-budget"
                   name="budgetEstime"
                   value={formData.budgetEstime}
                   onChange={handleInputChange}
                   className="devis-select"
+                  aria-required="true"
                   required
                 >
                   <option value="">Sélectionnez un budget</option>
@@ -243,40 +253,46 @@ const DevisPage = () => {
               </div>
             </div>
             <div className="devis-field-container">
-              <label className="devis-label">
+              <label htmlFor="devis-description" className="devis-label">
                 Description du projet <span className="devis-required">*</span>
               </label>
               <textarea
+                id="devis-description"
                 name="description"
                 value={formData.description}
                 onChange={handleInputChange}
                 placeholder="Décrivez votre projet, vos objectifs et vos besoins spécifiques..."
                 className="devis-textarea"
+                aria-required="true"
                 required
               />
             </div>
             <div className="devis-field-container">
               <div className="devis-checkbox-container">
                 <input
+                  id="devis-rgpd"
                   type="checkbox"
                   name="rgpd"
                   checked={formData.rgpd}
                   onChange={handleInputChange}
                   className="devis-checkbox"
+                  aria-required="true"
                   required
                 />
-                <label className="devis-checkbox-label">
+                <label htmlFor="devis-rgpd" className="devis-checkbox-label">
                   J'accepte que mes données soient utilisées pour traiter ma demande, conformément à la <a href="/politique-confidentialite" target="_blank" rel="noopener noreferrer">politique de confidentialité</a> et à la réglementation sur la protection des données personnelles (RGPD).
                 </label>
               </div>
             </div>
             <button
-              type="submit"
-              className="devis-button"
-              onClick={handleSubmit}
-              disabled={loading}
+                type="submit"
+                className="devis-button"
+                onClick={handleSubmit}
+                disabled={loading}
+                aria-label="Soumettre la demande de devis"
+                aria-busy={loading}
             >
-              <Send size={20} />
+              <Send size={20} aria-hidden="true"/>
               <span>{loading ? 'Envoi...' : 'Soumettre ma demande'}</span>
             </button>
             <div className="devis-footer-note">
