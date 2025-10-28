@@ -199,13 +199,14 @@ const ConnexionPage = () => {
                   </div>
                 )}
 
-                <div className="connexion-field-container">
+                <div htmlFor="connexion-email" className="connexion-field-container">
                   <label className="connexion-label">
                     Email <span className="connexion-required">*</span>
                   </label>
                   <div className="connexion-input-container">
                     <Mail className="connexion-input-icon" />
                     <Field
+                      id="connexion-email"
                       type="email"
                       name="email"
                       placeholder="votre@email.com"
