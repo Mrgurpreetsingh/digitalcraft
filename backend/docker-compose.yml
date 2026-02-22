@@ -5,14 +5,19 @@ services:
     image: mysql:8.0
     container_name: digitalcraft_mysql
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: digitalcraft
-      MYSQL_USER: app_user
-      MYSQL_PASSWORD: app_password
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${DB_NAME:-digitalcraft}
+      MYSQL_USER: ${DB_USER:-app_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-app_password}
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
     command: --default-authentication-plugin=mysql_native_password
     networks:
@@ -26,29 +31,24 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=${NODE_ENV:-development}
       - PORT=5000
       - DB_HOST=mysql
       - DB_PORT=3306
-      - DB_USER=app_user
-      - DB_PASSWORD=app_password
-      - DB_NAME=digitalcraft
+      - DB_USER=${DB_USER:-app_user}
+      - DB_PASSWORD=${DB_PASSWORD:-app_password}
+      - DB_NAME=${DB_NAME:-digitalcraft}
+      - EMAIL_HOST=${EMAIL_HOST:-smtp.gmail.com}
+      - EMAIL_PORT=${EMAIL_PORT:-587}
+      - EMAIL_USER=${EMAIL_USER}
+      - EMAIL_PASS=${EMAIL_PASS}
+      - JWT_SECRET=${JWT_SECRET}
     volumes:
       - .:/app
       - /app/node_modules
     depends_on:
-      - mysql
-    restart: unless-stopped
-    networks:
-      - digitalcraft_network
-
-  apache:
-    image: httpd:2.4
-    container_name: digitalcraft_apache
-    ports:
-      - "8080:80"
-    volumes:
-      - ./apache/html:/usr/local/apache2/htdocs/
+      mysql:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - digitalcraft_network
@@ -59,12 +59,13 @@ services:
     environment:
       PMA_HOST: mysql
       PMA_PORT: 3306
-      PMA_USER: app_user
-      PMA_PASSWORD: app_password
+      PMA_USER: ${DB_USER:-app_user}
+      PMA_PASSWORD: ${DB_PASSWORD:-app_password}
     ports:
       - "8081:80"
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - digitalcraft_network
