@@ -23,8 +23,22 @@ dist-ssr
 *.sln
 *.sw?
 
-#ajout manuel 
+#ajout manuel
 node_modules
 build
 .env
 .dockerignore
+
+# Documentation markdown (hors README principal)
+*.md
+!README.md
+
+# Firebase credentials (NE JAMAIS COMMIT)
+firebase-service-account.json
+**/firebase-service-account.json
+backend/firebase-service-account.json
+
+# Fichiers de configuration Firebase sensibles
+.firebaserc
+firebase-debug.log
+.firebase/

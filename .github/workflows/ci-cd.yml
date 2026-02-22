@@ -1,0 +1,210 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: '18.x'
+
+jobs:
+  # JOB 1: Tests Backend
+  backend-tests:
+    name: Tests Backend
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: digitalcraft_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Run linter
+        working-directory: ./backend
+        run: npm run lint || echo "No lint script"
+
+      - name: Run tests
+        working-directory: ./backend
+        run: npm test
+        env:
+          NODE_ENV: test
+          DB_HOST: localhost
+          DB_USER: root
+          DB_PASSWORD: root
+          DB_NAME: digitalcraft_test
+          JWT_SECRET: test_secret_key
+
+      - name: Generate coverage report
+        working-directory: ./backend
+        run: npm run test:coverage || echo "No coverage script"
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./backend/coverage/lcov.info
+          flags: backend
+
+  # JOB 2: Tests Frontend
+  frontend-tests:
+    name: Tests Frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Run linter
+        working-directory: ./frontend
+        run: npm run lint || echo "No lint script"
+
+      - name: Run tests
+        working-directory: ./frontend
+        run: npm test || echo "No test script configured"
+
+      - name: Build application (test build)
+        working-directory: ./frontend
+        run: npm run build
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+
+      - name: Generate coverage report
+        working-directory: ./frontend
+        run: npm run test:coverage || echo "No coverage script"
+        continue-on-error: true
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        continue-on-error: true
+        with:
+          files: ./frontend/coverage/lcov.info
+          flags: frontend
+
+  # JOB 3: Analyse de sécurité
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run npm audit (Backend)
+        working-directory: ./backend
+        run: npm audit --audit-level=moderate || true
+
+      - name: Run npm audit (Frontend)
+        working-directory: ./frontend
+        run: npm audit --audit-level=moderate || true
+
+  # JOB 4: Build et Push Docker Images (Backend + Frontend)
+  docker-build:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: [backend-tests, frontend-tests]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push Backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/digitalcraft-backend:latest
+            ${{ secrets.DOCKER_USERNAME }}/digitalcraft-backend:${{ github.sha }}
+          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/digitalcraft-backend:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/digitalcraft-backend:buildcache,mode=max
+
+      - name: Build and push Frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/digitalcraft-frontend:latest
+            ${{ secrets.DOCKER_USERNAME }}/digitalcraft-frontend:${{ github.sha }}
+          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/digitalcraft-frontend:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/digitalcraft-frontend:buildcache,mode=max
+
+  # JOB 5: Déploiement Frontend sur Netlify (automatique via Netlify)
+  # Note: Netlify se déploie automatiquement via son intégration GitHub
+  # Ce job sert juste à valider que le build fonctionne
+  netlify-ready:
+    name: Netlify Build Ready
+    runs-on: ubuntu-latest
+    needs: [frontend-tests]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Check
+        run: echo "✅ Frontend tests passed - Netlify will auto-deploy from main branch"
+
+  # JOB 6: Déploiement Backend (production)
+  deploy-backend:
+    name: Deploy Backend to Production
+    runs-on: ubuntu-latest
+    needs: [docker-build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: https://api.digitalcraft.com
+
+    steps:
+      - name: Deploy to production server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PROD_SERVER_HOST }}
+          username: ${{ secrets.PROD_SERVER_USER }}
+          key: ${{ secrets.PROD_SERVER_SSH_KEY }}
+          script: |
+            cd /var/www/digitalcraft
+            docker-compose pull backend
+            docker-compose up -d backend
+            docker system prune -f

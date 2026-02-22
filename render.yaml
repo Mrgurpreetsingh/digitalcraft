@@ -1,0 +1,116 @@
+# Configuration Render.com pour DigitalCraft
+# Ce fichier permet de déployer automatiquement le backend sur Render
+
+services:
+  # ==========================================
+  # Backend API Node.js
+  # ==========================================
+  - type: web
+    name: digitalcraft-backend
+    runtime: docker
+    repo: https://github.com/VOTRE_USERNAME/digitalcraft
+    branch: main
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    region: frankfurt  # ou oregon, singapore selon votre localisation
+
+    # Variables d'environnement
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+      - key: PORT
+        value: 5000
+
+      # Base de données (connectée au service MySQL ci-dessous)
+      - key: DB_HOST
+        fromDatabase:
+          name: digitalcraft-mysql
+          property: host
+
+      - key: DB_PORT
+        fromDatabase:
+          name: digitalcraft-mysql
+          property: port
+
+      - key: DB_USER
+        fromDatabase:
+          name: digitalcraft-mysql
+          property: user
+
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: digitalcraft-mysql
+          property: password
+
+      - key: DB_NAME
+        fromDatabase:
+          name: digitalcraft-mysql
+          property: database
+
+      # JWT
+      - key: JWT_SECRET
+        generateValue: true  # Render génère automatiquement un secret
+
+      - key: JWT_EXPIRE
+        value: 7d
+
+      # Frontend URL (Netlify)
+      - key: FRONTEND_URL
+        value: https://VOTRE_APP.netlify.app
+
+      - key: CORS_ORIGIN
+        value: https://VOTRE_APP.netlify.app
+
+      # Firebase (À configurer manuellement dans Render Dashboard)
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+
+      - key: FIREBASE_PRIVATE_KEY_ID
+        sync: false
+
+      - key: FIREBASE_PRIVATE_KEY
+        sync: false
+
+      - key: FIREBASE_CLIENT_EMAIL
+        sync: false
+
+      - key: FIREBASE_CLIENT_ID
+        sync: false
+
+      - key: FIREBASE_CLIENT_X509_CERT_URL
+        sync: false
+
+      # Sécurité
+      - key: HELMET_ENABLED
+        value: true
+
+      - key: MORGAN_ENABLED
+        value: true
+
+      - key: RATE_LIMIT_WINDOW_MS
+        value: 900000
+
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: 100
+
+      # reCAPTCHA (Optionnel)
+      - key: RECAPTCHA_SECRET
+        sync: false
+
+    # Healthcheck
+    healthCheckPath: /api
+
+    # Auto-deploy
+    autoDeploy: true
+
+# ==========================================
+# Base de données MySQL (Render Free)
+# ==========================================
+databases:
+  - name: digitalcraft-mysql
+    databaseName: digitalcraft
+    user: digitalcraft_user
+    plan: free
+    region: frankfurt

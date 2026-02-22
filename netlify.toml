@@ -1,0 +1,54 @@
+# Configuration Netlify pour DigitalCraft Frontend
+
+[build]
+  # Dossier racine du frontend
+  base = "frontend/"
+
+  # Commande de build
+  command = "npm run build"
+
+  # Dossier à publier
+  publish = "dist"
+
+# Variables d'environnement de build
+# À configurer dans l'interface Netlify : Settings > Build & deploy > Environment variables
+[build.environment]
+  NODE_VERSION = "18"
+
+# Redirections pour SPA (Single Page Application)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Headers de sécurité
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "no-referrer-when-downgrade"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
+
+# Cache des fichiers statiques
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Configuration du contexte de production
+[context.production]
+  command = "npm run build"
+
+# Configuration du contexte de preview (PR)
+[context.deploy-preview]
+  command = "npm run build"
+
+# Configuration de la branche develop
+[context.develop]
+  command = "npm run build"
+
+# Optimisation des images (si Netlify Image CDN est activé)
+[images]
+  remote_images = ["https://images.unsplash.com/*"]

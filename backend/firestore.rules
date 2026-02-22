@@ -1,0 +1,44 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ==========================================
+    // Collection LOGS - Backend uniquement
+    // ==========================================
+    match /logs/{logId} {
+      // Personne ne peut accéder directement aux logs depuis le client
+      // Seul le backend avec Firebase Admin SDK peut lire/écrire
+      allow read, write: if false;
+    }
+
+    // ==========================================
+    // Collection AVIS - Accès mixte
+    // ==========================================
+    match /avis/{avisId} {
+      // LECTURE : Public peut lire les avis approuvés uniquement
+      allow read: if resource == null || resource.data.status == 'approved';
+
+      // CRÉATION : Permet au backend de créer des avis
+      // (via Firebase Admin SDK uniquement)
+      allow create: if false;
+
+      // MODIFICATION/SUPPRESSION : Backend uniquement
+      allow update, delete: if false;
+    }
+
+    // ==========================================
+    // Collection TOKENS (pour avis clients)
+    // ==========================================
+    match /tokens/{tokenId} {
+      // Seul le backend peut gérer les tokens
+      allow read, write: if false;
+    }
+
+    // ==========================================
+    // Par défaut, tout est bloqué
+    // ==========================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
